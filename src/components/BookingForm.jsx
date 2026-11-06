@@ -20,7 +20,7 @@ export default function BookingForm() {
     setDate(chosenDate);
     setSelectedSlot('');
     if (!chosenDate) return;
-
+    
     setLoading(true);
     try {
       const startOfDay = new Date(`${chosenDate}T00:00:00`).toISOString();
@@ -31,7 +31,7 @@ export default function BookingForm() {
       });
 
       const bookedHours = existingBookings.map(b => new Date(b.booking_date).getHours());
-      
+
       const slotData = STANDARD_HOURS.map(hour => {
         const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
         const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -71,7 +71,7 @@ export default function BookingForm() {
 
     try {
       await pb.collection('bookings').create(payload);
-      alert('Booking request received!');
+      alert('Booking request received! We will confirm your slot shortly.');
       setName('');
       setEmail('');
       setDate('');
@@ -85,40 +85,61 @@ export default function BookingForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1">Name:</label>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} required 
-          className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-white" />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Full Name</label>
+          <input 
+            type="text" 
+            value={name} 
+            onChange={e => setName(e.target.value)} 
+            required 
+            placeholder="Alex Morgan"
+            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#55CDFC] focus:ring-1 focus:ring-[#55CDFC] text-sm transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Email Address</label>
+          <input 
+            type="email" 
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            required 
+            placeholder="alex@example.com"
+            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#55CDFC] focus:ring-1 focus:ring-[#55CDFC] text-sm transition-all"
+          />
+        </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Email:</label>
-        <input type="email" value={email} onChange={e => setEmail(e.target.value)} required 
-          className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-white" />
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Select Date</label>
+        <input 
+          type="date" 
+          value={date} 
+          onChange={handleDateChange} 
+          required 
+          className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-[#55CDFC] focus:ring-1 focus:ring-[#55CDFC] text-sm transition-all [color-scheme:dark]"
+        />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Select Date:</label>
-        <input type="date" value={date} onChange={handleDateChange} required 
-          className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-white" />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Available Time Slots:</label>
-        <div className="grid grid-cols-2 gap-2 mt-2">
-          {!date && <span className="text-slate-400 text-sm col-span-2">Please select a date above first.</span>}
-          {loading && <span className="text-slate-400 text-sm col-span-2">Loading slots...</span>}
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Available Windows</label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {!date && <span className="text-slate-500 text-xs italic col-span-full py-2">Select a date above to check availability.</span>}
+          {loading && <span className="text-[#55CDFC] text-xs col-span-full py-2 animate-pulse">Checking appointment slots...</span>}
           {slots.map(slot => (
             <button
               key={slot.hour}
               type="button"
               disabled={slot.isTaken}
               onClick={() => setSelectedSlot(slot.isoString)}
-              className={`p-2 rounded-lg border text-sm font-medium transition-all ${
-                slot.isTaken ? 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed' :
-                selectedSlot === slot.isoString ? 'bg-sky-500 border-sky-400 text-slate-950 font-bold' :
-                'bg-slate-900 border-slate-700 hover:border-sky-500 text-slate-200'
+              className={`p-3 rounded-xl border text-xs font-medium transition-all ${
+                slot.isTaken
+                  ? 'bg-slate-950/40 border-slate-800/40 text-slate-600 cursor-not-allowed line-through'
+                  : selectedSlot === slot.isoString
+                  ? 'bg-gradient-to-r from-[#55CDFC] via-white to-[#F7A8B8] border-transparent text-slate-950 font-bold shadow-lg shadow-[#55CDFC]/20'
+                  : 'bg-slate-950 border-slate-800 text-slate-200 hover:border-[#55CDFC]/60 hover:text-white'
               }`}
             >
               {slot.label} {slot.isTaken && '(Booked)'}
@@ -127,21 +148,33 @@ export default function BookingForm() {
         </div>
       </div>
 
-      <fieldset className="border border-slate-800 p-4 rounded-xl space-y-3">
-        <legend className="text-sky-400 font-semibold px-2 text-sm">Short Notice Options</legend>
-        <label className="flex items-center space-x-2 text-sm cursor-pointer">
-          <input type="checkbox" checked={acceptsShortNotice} onChange={e => setAcceptsShortNotice(e.target.checked)} 
-            className="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-0" />
-          <span>Notify me if an earlier appointment slot opens up!</span>
+      <fieldset className="border border-slate-800 bg-slate-950/40 p-4 rounded-2xl space-y-3">
+        <legend className="text-[#55CDFC] font-medium px-2 text-xs uppercase tracking-wider">Short Notice Preferences</legend>
+        <label className="flex items-center space-x-3 text-xs text-slate-300 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={acceptsShortNotice} 
+            onChange={e => setAcceptsShortNotice(e.target.checked)} 
+            className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-[#55CDFC] focus:ring-0 focus:ring-offset-0"
+          />
+          <span>Notify me if an earlier appointment opens up</span>
         </label>
-
+        
         {acceptsShortNotice && (
-          <div className="flex gap-2 items-center pt-2">
-            <span className="text-sm text-slate-300">Minimum notice:</span>
-            <input type="number" min="1" value={noticeValue} onChange={e => setNoticeValue(parseInt(e.target.value) || 1)} 
-              className="w-16 p-1 bg-slate-900 border border-slate-700 rounded text-center text-white text-sm" />
-            <select value={noticeUnit} onChange={e => setNoticeUnit(e.target.value)} 
-              className="p-1 bg-slate-900 border border-slate-700 rounded text-sm text-white">
+          <div className="flex flex-wrap gap-2 items-center pt-2 border-t border-slate-800">
+            <span className="text-xs text-slate-400">Minimum notice required:</span>
+            <input 
+              type="number" 
+              min="1" 
+              value={noticeValue} 
+              onChange={e => setNoticeValue(parseInt(e.target.value) || 1)} 
+              className="w-16 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-center text-slate-100 text-xs focus:border-[#55CDFC]"
+            />
+            <select 
+              value={noticeUnit} 
+              onChange={e => setNoticeUnit(e.target.value)}
+              className="px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:border-[#55CDFC]"
+            >
               <option value="hours">Hour(s)</option>
               <option value="days">Day(s)</option>
             </select>
@@ -149,9 +182,11 @@ export default function BookingForm() {
         )}
       </fieldset>
 
-      <button type="submit" 
-        className="w-full py-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-xl transition-colors">
-        Submit Request
+      <button 
+        type="submit" 
+        className="w-full py-4 bg-gradient-to-r from-[#55CDFC] via-white to-[#F7A8B8] hover:opacity-95 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-xl shadow-[#55CDFC]/10"
+      >
+        Submit Booking Request
       </button>
     </form>
   );
