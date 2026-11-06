@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <title>Delta Aesthetics - Booking</title>
   <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+  <style>
+    .slot-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .slot-btn { padding: 8px 12px; border: 1px solid #ccc; background: #fff; cursor: pointer; border-radius: 4px; }
+    .slot-btn.selected { background: #007bff; color: white; border-color: #0056b3; }
+    .slot-btn:disabled { background: #e0e0e0; color: #888; cursor: not-allowed; border-color: #d0d0d0; }
+  </style>
 </head>
 <body>
   <h1>Book an Appointment</h1>
@@ -16,8 +22,19 @@
       <label>Email:<br><input type="email" id="email" required /></label>
     </p>
     <p>
-      <label>Desired Date & Time:<br><input type="datetime-local" id="booking-date" required /></label>
+      <label>Select Date:<br><input type="date" id="booking-date" required /></label>
     </p>
+
+    <!-- Available Slots Container -->
+    <p>
+      <label>Available Time Slots:</label>
+      <div id="slots-container" class="slot-grid">
+        <span style="color: #666; font-size: 0.9em;">Please select a date above to view available times.</span>
+      </div>
+    </p>
+
+    <!-- Hidden input to hold the chosen ISO string -->
+    <input type="hidden" id="selected-slot" required />
 
     <!-- Short Notice Opt-In -->
     <fieldset style="margin-top: 1em;">
@@ -38,11 +55,80 @@
       </div>
     </fieldset>
 
-    <p><button type="submit">Submit Request</button></p>
+    <p><button type="submit" style="margin-top: 15px;">Submit Request</button></p>
   </form>
 
   <script>
     const pb = new PocketBase('https://api.delta-aesthetics.com');
+
+    // Define standard daily slots (e.g., 10:00 AM, 12:00 PM, 2:00 PM, 4:00 PM)
+    const STANDARD_HOURS = [10, 12, 14, 16]; 
+
+    const dateInput = document.getElementById('booking-date');
+    const slotsContainer = document.getElementById('slots-container');
+    const selectedSlotInput = document.getElementById('selected-slot');
+
+    // When date changes, fetch booked slots and render choices
+    dateInput.addEventListener('change', async () => {
+      const chosenDate = dateInput.value;
+      if (!chosenDate) return;
+
+      slotsContainer.innerHTML = 'Loading available slots...';
+
+      try {
+        // Query PocketBase bookings for this specific date
+        // (Assumes booking_date is stored in ISO format compatible with filtering)
+        const startOfDay = `${chosenDate} 00:00:00`;
+        const endOfDay = `${chosenDate} 23:59:59`;
+
+        const existingBookings = await pb.collection('bookings').getFullList({
+          filter: `booking_date >= '${startOfDay}' && booking_date <= '${endOfDay}' && status != 'cancelled_by_client' && status != 'cancelled_by_admin'`
+        });
+
+        // Extract booked hours
+        const bookedHours = existingBookings.map(b => {
+          const d = new Date(b.booking_date);
+          return d.getHours();
+        });
+
+        // Render slots
+        slotsContainer.innerHTML = '';
+        STANDARD_HOURS.forEach(hour => {
+          const btn = document.createElement('button');
+          type = 'button';
+          btn.type = 'button';
+          
+          // Format display time (e.g., 10:00 AM)
+          const displayHour = hour > 12 ? hour - 12 : hour;
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          btn.textContent = `${displayHour}:00 ${ampm}`;
+          btn.className = 'slot-btn';
+
+          const isTaken = bookedHours.includes(hour);
+
+          if (isTaken) {
+            btn.disabled = true;
+            btn.title = 'This slot is already booked';
+          } else {
+            btn.addEventListener('click', () => {
+              // Highlight selection
+              document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+
+              // Construct ISO datetime string for submission
+              const isoString = `${chosenDate}T${String(hour).padStart(2, '0')}:00:00.000Z`;
+              selectedSlotInput.value = isoString;
+            });
+          }
+
+          slotsContainer.appendChild(btn);
+        });
+
+      } catch (err) {
+        console.error('Error fetching slots:', err);
+        slotsContainer.innerHTML = '<span style="color: red;">Could not load slots.</span>';
+      }
+    });
 
     // Toggle short notice inputs
     const toggle = document.getElementById('short-notice-toggle');
@@ -54,6 +140,11 @@
     // Form submit handler
     document.getElementById('booking-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      if (!selectedSlotInput.value) {
+        alert('Please select an available time slot.');
+        return;
+      }
 
       const acceptsShortNotice = toggle.checked;
       let noticeHours = 0;
@@ -67,7 +158,7 @@
       const payload = {
         customer_name: document.getElementById('name').value,
         customer_email: document.getElementById('email').value,
-        booking_date: document.getElementById('booking-date').value,
+        booking_date: selectedSlotInput.value,
         status: 'pending',
         accepts_short_notice: acceptsShortNotice,
         notice_lead_time: noticeHours
@@ -77,6 +168,7 @@
         await pb.collection('bookings').create(payload);
         alert('Booking request received!');
         document.getElementById('booking-form').reset();
+        slotsContainer.innerHTML = '<span style="color: #666; font-size: 0.9em;">Please select a date above to view available times.</span>';
         options.style.display = 'none';
       } catch (err) {
         console.error('Submission failed:', err);
