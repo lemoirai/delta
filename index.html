@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Delta Aesthetics - Booking</title>
+  <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+</head>
+<body>
+  <h1>Book an Appointment</h1>
+  
+  <form id="booking-form">
+    <p>
+      <label>Name:<br><input type="text" id="name" required /></label>
+    </p>
+    <p>
+      <label>Email:<br><input type="email" id="email" required /></label>
+    </p>
+    <p>
+      <label>Desired Date & Time:<br><input type="datetime-local" id="booking-date" required /></label>
+    </p>
+
+    <!-- Short Notice Opt-In -->
+    <fieldset style="margin-top: 1em;">
+      <legend>Short Notice Options</legend>
+      <label>
+        <input type="checkbox" id="short-notice-toggle" />
+        Notify me if an earlier appointment slot opens up!
+      </label>
+
+      <div id="notice-options" style="display: none; margin-top: 0.5em;">
+        <label>Minimum notice needed:
+          <input type="number" id="notice-value" min="1" value="2" style="width: 60px;" />
+          <select id="notice-unit">
+            <option value="hours" selected>Hour(s)</option>
+            <option value="days">Day(s)</option>
+          </select>
+        </label>
+      </div>
+    </fieldset>
+
+    <p><button type="submit">Submit Request</button></p>
+  </form>
+
+  <script>
+    const pb = new PocketBase('https://api.delta-aesthetics.com');
+
+    // Toggle short notice inputs
+    const toggle = document.getElementById('short-notice-toggle');
+    const options = document.getElementById('notice-options');
+    toggle.addEventListener('change', () => {
+      options.style.display = toggle.checked ? 'block' : 'none';
+    });
+
+    // Form submit handler
+    document.getElementById('booking-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const acceptsShortNotice = toggle.checked;
+      let noticeHours = 0;
+
+      if (acceptsShortNotice) {
+        const val = parseInt(document.getElementById('notice-value').value, 10);
+        const unit = document.getElementById('notice-unit').value;
+        noticeHours = (unit === 'days') ? val * 24 : val;
+      }
+
+      const payload = {
+        customer_name: document.getElementById('name').value,
+        customer_email: document.getElementById('email').value,
+        booking_date: document.getElementById('booking-date').value,
+        status: 'pending',
+        accepts_short_notice: acceptsShortNotice,
+        notice_lead_time: noticeHours
+      };
+
+      try {
+        await pb.collection('bookings').create(payload);
+        alert('Booking request received!');
+        document.getElementById('booking-form').reset();
+        options.style.display = 'none';
+      } catch (err) {
+        console.error('Submission failed:', err);
+        alert('Could not submit booking request.');
+      }
+    });
+  </script>
+</body>
+</html>
