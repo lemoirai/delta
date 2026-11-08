@@ -93,8 +93,11 @@ export default function BookingForm() {
       // Refresh slots for current date
       await fetchSlotsForDate(date);
     } catch (err) {
-      console.error('Submission failed:', err);
-      alert('Could not submit booking request. Please verify PocketBase API rules allow public creation.');
+      console.error('Full submission error details:', err);
+      if (err.response) {
+        console.error('PocketBase validation errors:', JSON.stringify(err.response.data, null, 2));
+      }
+      alert('Could not submit booking request: ' + (err.message || 'Check console for validation details.'));
     } finally {
       setSubmitting(false);
     }
