@@ -12,7 +12,8 @@ export default function AdminDashboard({ onClose }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (pb.authStore.isValid && pb.authStore.model?.collectionName === '_superusers') {
+    // Check for valid superuser session across PocketBase versions
+    if (pb.authStore.isValid && (pb.authStore.isAdmin || pb.authStore.model?.collectionName === '_superusers')) {
       setAuthenticated(true);
       loadAdminData();
     }
@@ -23,11 +24,24 @@ export default function AdminDashboard({ onClose }) {
     setLoading(true);
     setError('');
     try {
-      await pb.collection('_superusers').authWithPassword(email, password);
+      // Try admins API first (PocketBase v0.22+ standard), fallback to collection API if custom collection
+      if (pb.admins) {
+        await pb.admins.authWithPassword(email, password);
+      } else {
+        await pb.collection('_superusers').authWithPassword(email, password);
+      }
       setAuthenticated(true);
       loadAdminData();
     } catch (err) {
-      setError('Invalid operator credentials.');
+      // Direct fallback attempt for legacy/custom setups
+      try {
+        await pb.collection('_superusers').authWithPassword(email, password);
+        setAuthenticated(true);
+        loadAdminData();
+      } catch (fallbackErr) {
+        console.error('Admin authentication failed:', fallbackErr);
+        setError('Invalid operator credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -61,9 +75,10 @@ export default function AdminDashboard({ onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+          type="button"
+          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
         >
-          ✕
+          &times;
         </button>
       </div>
 
@@ -95,7 +110,7 @@ export default function AdminDashboard({ onClose }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#55CDFC] hover:bg-[#F7A8B8] text-black font-semibold rounded-xl text-sm transition"
+            className="w-full py-3 bg-[#55CDFC] hover:bg-[#F7A8B8] text-black font-semibold rounded-xl text-sm transition cursor-pointer disabled:opacity-50"
           >
             {loading ? 'Authenticating...' : 'Sign In as Staff'}
           </button>
@@ -103,10 +118,11 @@ export default function AdminDashboard({ onClose }) {
       ) : (
         <div className="space-y-6">
           <div className="flex justify-between items-center text-xs text-slate-400">
-            <span>Operator: {pb.authStore.model?.email}</span>
+            <span>Operator: {pb.authStore.model?.email || pb.authStore.admin?.email}</span>
             <button
               onClick={() => { pb.authStore.clear(); setAuthenticated(false); }}
-              className="text-red-400 hover:underline"
+              type="button"
+              className="text-red-400 hover:underline cursor-pointer"
             >
               Sign Out
             </button>
@@ -147,7 +163,8 @@ export default function AdminDashboard({ onClose }) {
                         {b.status !== 'confirmed' && (
                           <button
                             onClick={() => updateBookingStatus(b.id, 'confirmed')}
-                            className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[10px]"
+                            type="button"
+                            className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[10px] cursor-pointer"
                           >
                             Confirm
                           </button>
@@ -155,7 +172,8 @@ export default function AdminDashboard({ onClose }) {
                         {b.status !== 'cancelled' && (
                           <button
                             onClick={() => updateBookingStatus(b.id, 'cancelled')}
-                            className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded text-[10px]"
+                            type="button"
+                            className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded text-[10px] cursor-pointer"
                           >
                             Cancel
                           </button>

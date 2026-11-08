@@ -36,11 +36,25 @@ export default function ClientPortal({ onClose }) {
     setLoading(true);
     setError('');
     try {
+      // 1. Ensure user record exists in PocketBase 'users' collection before requesting OTP
+      try {
+        await pb.collection('users').create({
+          email: email,
+          emailVisibility: true,
+          password: Math.random().toString(36).slice(-10) + 'A1!',
+          passwordConfirm: Math.random().toString(36).slice(-10) + 'A1!'
+        });
+      } catch (createErr) {
+        // User already exists, which is expected for returning clients
+      }
+
+      // 2. Request the OTP code
       const res = await pb.collection('users').requestOTP(email);
       setOtpId(res.otpId);
       setStep('otp');
     } catch (err) {
-      setError('Unable to send code. Please check your email address.');
+      console.error('OTP request failed:', err);
+      setError('Unable to send code. Please check your email address and ensure public user creation is allowed on the users collection.');
     } finally {
       setLoading(false);
     }
@@ -51,8 +65,6 @@ export default function ClientPortal({ onClose }) {
     setLoading(true);
     setError('');
     try {
-      // Fixed: PocketBase authWithOTP expects (otpId, otpCode, usernameOrEmail) or checks current context. 
-      // Passing otpId, otpCode, and email guarantees correct validation mapping.
       await pb.collection('users').authWithOTP(otpId, otpCode, email);
       setStep('dashboard');
       fetchBookings();
@@ -84,9 +96,9 @@ export default function ClientPortal({ onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
         >
-          ✕
+          &times;
         </button>
       </div>
 
@@ -105,7 +117,7 @@ export default function ClientPortal({ onClose }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#55CDFC] hover:bg-[#F7A8B8] text-black font-semibold rounded-xl text-sm transition"
+            className="w-full py-3 bg-[#55CDFC] hover:bg-[#F7A8B8] text-black font-semibold rounded-xl text-sm transition cursor-pointer"
           >
             {loading ? 'Sending Code...' : 'Send Access Code'}
           </button>
@@ -127,7 +139,7 @@ export default function ClientPortal({ onClose }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#55CDFC] hover:bg-[#F7A8B8] text-black font-semibold rounded-xl text-sm transition"
+            className="w-full py-3 bg-[#55CDFC] hover:bg-[#F7A8B8] text-black font-semibold rounded-xl text-sm transition cursor-pointer"
           >
             {loading ? 'Verifying...' : 'Verify & Sign In'}
           </button>
@@ -140,7 +152,7 @@ export default function ClientPortal({ onClose }) {
             <span>Signed in as {pb.authStore.model?.email}</span>
             <button
               onClick={() => { pb.authStore.clear(); setStep('email'); }}
-              className="text-red-400 hover:underline"
+              className="text-red-400 hover:underline cursor-pointer"
             >
               Sign Out
             </button>
@@ -175,7 +187,7 @@ export default function ClientPortal({ onClose }) {
                         {b.status !== 'cancelled' && (
                           <button
                             onClick={() => handleCancel(b.id)}
-                            className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded transition text-[10px]"
+                            className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded transition text-[10px] cursor-pointer"
                           >
                             Cancel
                           </button>
