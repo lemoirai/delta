@@ -65,12 +65,15 @@ export default function BookingForm() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (submitting) return; // Prevent double submission race conditions
-    if (!selectedSlot) {
-      alert('Please select an available time slot.');
-      return;
-    }
+      e.preventDefault();
+      if (submitting) return; // Immediate hard guard against duplicate triggers
+      setSubmitting(true);
+
+      if (!selectedSlot) {
+        alert('Please select an available time slot.');
+        setSubmitting(false);
+        return;
+      }
 
     setSubmitting(true);
     let noticeHours = acceptsShortNotice ? (noticeUnit === 'days' ? noticeValue * 24 : noticeValue) : 0;
