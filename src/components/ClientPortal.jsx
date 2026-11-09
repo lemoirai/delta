@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import PocketBase from 'pocketbase';
-
-const pb = new PocketBase('https://api.delta-aesthetics.com');
+import { pb } from '../lib/pb.js';
 
 export default function ClientPortal({ modalId }) {
   const handleClose = () => {

@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import PocketBase from 'pocketbase';
-
-const pb = new PocketBase('https://api.delta-aesthetics.com');
+import { pb } from '../lib/pb.js';
 const STANDARD_HOURS = [10, 12, 14, 16];
 
 export default function BookingForm() {
