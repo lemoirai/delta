@@ -22,3 +22,10 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# private ops notes (separate git repo, never public)
+ops/
+
+# local environment
+.env.*
+!.env.example
