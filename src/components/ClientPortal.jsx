@@ -3,7 +3,11 @@ import PocketBase from 'pocketbase';
 
 const pb = new PocketBase('https://api.delta-aesthetics.com');
 
-export default function ClientPortal({ onClose }) {
+export default function ClientPortal({ modalId }) {
+  const handleClose = () => {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add('hidden');
+  };
   const [step, setStep] = useState('email'); // email | otp | dashboard
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -95,7 +99,7 @@ export default function ClientPortal({ onClose }) {
           <p className="text-xs text-slate-400">View and manage your upcoming appointments.</p>
         </div>
         <button
-          onClick={onClose}
+          onClick={(e) => { e.stopPropagation(); handleClose(); }}
           className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
         >
           &times;

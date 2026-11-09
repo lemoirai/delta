@@ -83,12 +83,12 @@ import AdminDashboard from '../components/AdminDashboard.jsx';
 
   <!-- Client Portal Modal Backdrop -->
   <div id="portal-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <ClientPortal client:load onClose={() => document.getElementById('portal-modal').classList.add('hidden')} />
+    <ClientPortal client:load modalId="portal-modal" />
   </div>
 
   <!-- Admin Staff Modal Backdrop -->
   <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <AdminDashboard client:load onClose={() => document.getElementById('admin-modal').classList.add('hidden')} />
+    <AdminDashboard client:load modalId="admin-modal" />
   </div>
 
   <script>

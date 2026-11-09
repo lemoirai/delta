@@ -3,7 +3,11 @@ import PocketBase from 'pocketbase';
 
 const pb = new PocketBase('https://api.delta-aesthetics.com');
 
-export default function AdminDashboard({ onClose }) {
+export default function AdminDashboard({ modalId }) {
+  const handleClose = () => {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add('hidden');
+  };
   const [authenticated, setAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,7 +78,7 @@ export default function AdminDashboard({ onClose }) {
           <p className="text-xs text-slate-400">Manage appointment requests and queue status.</p>
         </div>
         <button
-          onClick={onClose}
+          onClick={(e) => { e.stopPropagation(); handleClose(); }}
           type="button"
           className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
         >
