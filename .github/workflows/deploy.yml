@@ -24,7 +24,9 @@ jobs:
       - name: Install, build, and upload Site
         uses: withastro/action@v3
         with:
-          node-version: 22
+          node-version: 24
+        env:
+          PUBLIC_PB_URL: https://api.delta-aesthetics.com
 
   deploy:
     needs: build
