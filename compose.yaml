@@ -1,0 +1,38 @@
+# Local dev/test stack. See AGENTS.md before using.
+#
+# Current state (pre-refactor baseline): Astro only. The site still calls the
+# production PocketBase URL hard-coded in src/components/*.jsx, so do NOT submit
+# forms from the local site. PocketBase, Mailpit and seed services come next
+# (ops/REFACTOR.md section 4.3).
+#
+#   docker compose up -d --wait     -> http://localhost:4321
+#   docker compose logs -f web
+#   docker compose down             (add -v to drop the node_modules volume)
+
+name: delta
+
+services:
+  web:
+    # Node 24 LTS ships npm 11, the same major as the host. npm 10 (node:22/20)
+    # rewrites package-lock.json by stripping "libc" fields, even under npm ci.
+    image: node:24-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm ci --no-audit --no-fund && npx astro dev --host 0.0.0.0 --port 4321"
+    environment:
+      # Windows bind mounts don't deliver file-change events into the container
+      CHOKIDAR_USEPOLLING: "1"
+      ASTRO_TELEMETRY_DISABLED: "1"
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules   # Linux modules stay off the Windows mount
+    ports:
+      - "127.0.0.1:4321:4321"                # localhost only, not the LAN
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4321').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      start_period: 180s
+      retries: 30
+
+volumes:
+  web_node_modules:

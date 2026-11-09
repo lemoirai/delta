@@ -1,0 +1,41 @@
+# Optional local LLM (personal tooling, not part of the site). Never started by
+# the default stack or CI. Requires an NVIDIA GPU and LLAMA_MODELS_DIR in .env.
+#
+#   docker network create ai-network   # once
+#   docker compose -f compose.yaml -f compose.ai.yaml --profile ai up -d llama
+
+networks:
+  ai-network:
+    external: true
+
+services:
+  llama:
+    profiles: ["ai"]
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: llama-server
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - LLAMA_CACHE=/models
+    ports:
+      - "127.0.0.1:8000:8080"
+    volumes:
+      - ${LLAMA_MODELS_DIR:?set LLAMA_MODELS_DIR in .env}:/models
+    command: >
+      -hf ornith-ai/Ornith-1.5-9B-GGUF:Q6_K
+      --alias ornith-local
+      --jinja
+      --no-mmproj
+      --n-gpu-layers 99
+      --ctx-size 65536
+      --parallel 1
+      --temp 0.6 --top-p 0.95 --top-k 20
+      --host 0.0.0.0 --port 8080
+    networks:
+      - ai-network
+    restart: unless-stopped
