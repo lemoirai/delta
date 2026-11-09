@@ -23,9 +23,9 @@ export default function ClientPortal({ modalId }) {
 
   const fetchBookings = async () => {
     try {
-      const records = await pb.collection('bookings').getFullList({ 
+      const records = await pb.collection('bookings').getFullList({
         filter: `customer_email = '${pb.authStore.model?.email}'`,
-        sort: '-booking_date' 
+        sort: '-booking_date',
       });
       setBookings(records);
     } catch (err) {
@@ -44,7 +44,7 @@ export default function ClientPortal({ modalId }) {
           email: email,
           emailVisibility: true,
           password: Math.random().toString(36).slice(-10) + 'A1!',
-          passwordConfirm: Math.random().toString(36).slice(-10) + 'A1!'
+          passwordConfirm: Math.random().toString(36).slice(-10) + 'A1!',
         });
       } catch (createErr) {
         // User already exists, which is expected for returning clients
@@ -56,7 +56,9 @@ export default function ClientPortal({ modalId }) {
       setStep('otp');
     } catch (err) {
       console.error('OTP request failed:', err);
-      setError('Unable to send code. Please check your email address and ensure public user creation is allowed on the users collection.');
+      setError(
+        'Unable to send code. Please check your email address and ensure public user creation is allowed on the users collection.',
+      );
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,10 @@ export default function ClientPortal({ modalId }) {
           <p className="text-xs text-slate-400">View and manage your upcoming appointments.</p>
         </div>
         <button
-          onClick={(e) => { e.stopPropagation(); handleClose(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleClose();
+          }}
           className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
         >
           &times;
@@ -128,7 +133,9 @@ export default function ClientPortal({ modalId }) {
 
       {step === 'otp' && (
         <form onSubmit={handleVerifyOTP} className="space-y-4">
-          <p className="text-xs text-slate-400">Verification code sent to <span className="text-[#55CDFC]">{email}</span>.</p>
+          <p className="text-xs text-slate-400">
+            Verification code sent to <span className="text-[#55CDFC]">{email}</span>.
+          </p>
           <input
             type="text"
             required
@@ -153,7 +160,10 @@ export default function ClientPortal({ modalId }) {
           <div className="flex justify-between items-center text-xs text-slate-400">
             <span>Signed in as {pb.authStore.model?.email}</span>
             <button
-              onClick={() => { pb.authStore.clear(); setStep('email'); }}
+              onClick={() => {
+                pb.authStore.clear();
+                setStep('email');
+              }}
               className="text-red-400 hover:underline cursor-pointer"
             >
               Sign Out
@@ -172,16 +182,22 @@ export default function ClientPortal({ modalId }) {
               <tbody className="divide-y divide-slate-800/50">
                 {bookings.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className="py-4 text-center text-slate-500">No active bookings found.</td>
+                    <td colSpan="3" className="py-4 text-center text-slate-500">
+                      No active bookings found.
+                    </td>
                   </tr>
                 ) : (
                   bookings.map((b) => (
                     <tr key={b.id}>
                       <td className="py-4">{new Date(b.booking_date).toLocaleString()}</td>
                       <td className="py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] ${
-                          b.status === 'cancelled' ? 'bg-red-900/30 text-red-400 border border-red-800' : 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
-                        }`}>
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] ${
+                            b.status === 'cancelled'
+                              ? 'bg-red-900/30 text-red-400 border border-red-800'
+                              : 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                          }`}
+                        >
                           {b.status || 'confirmed'}
                         </span>
                       </td>

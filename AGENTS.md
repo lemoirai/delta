@@ -41,7 +41,7 @@ The stack has no local PocketBase yet. The components still hard-code `https://a
 - Treat all client data as consumer health data: collect the minimum, use preferred names, keep email and calendar text generic, and don't log PII.
 - No superuser (`_superusers` / `pb.admins`) auth in site code. Staff are `users` with a `role`.
 - Pushes to `main` deploy to production via GitHub Actions. Work on branches and don't push or merge unless asked.
-- Comments explain *why*, not *what*. No narration comments ("1. Do X", "Optional: …") and no claims about versions or compatibility you haven't verified.
+- Comments explain _why_, not _what_. No narration comments ("1. Do X", "Optional: …") and no claims about versions or compatibility you haven't verified.
 
 ## Astro docs
 

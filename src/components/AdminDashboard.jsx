@@ -15,7 +15,10 @@ export default function AdminDashboard({ modalId }) {
 
   useEffect(() => {
     // Check for valid superuser session across PocketBase versions
-    if (pb.authStore.isValid && (pb.authStore.isAdmin || pb.authStore.model?.collectionName === '_superusers')) {
+    if (
+      pb.authStore.isValid &&
+      (pb.authStore.isAdmin || pb.authStore.model?.collectionName === '_superusers')
+    ) {
       setAuthenticated(true);
       loadAdminData();
     }
@@ -76,7 +79,10 @@ export default function AdminDashboard({ modalId }) {
           <p className="text-xs text-slate-400">Manage appointment requests and queue status.</p>
         </div>
         <button
-          onClick={(e) => { e.stopPropagation(); handleClose(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleClose();
+          }}
           type="button"
           className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
         >
@@ -122,7 +128,10 @@ export default function AdminDashboard({ modalId }) {
           <div className="flex justify-between items-center text-xs text-slate-400">
             <span>Operator: {pb.authStore.model?.email || pb.authStore.admin?.email}</span>
             <button
-              onClick={() => { pb.authStore.clear(); setAuthenticated(false); }}
+              onClick={() => {
+                pb.authStore.clear();
+                setAuthenticated(false);
+              }}
               type="button"
               className="text-red-400 hover:underline cursor-pointer"
             >
@@ -144,7 +153,9 @@ export default function AdminDashboard({ modalId }) {
               <tbody className="divide-y divide-slate-800/50">
                 {bookings.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="py-4 text-center text-slate-500">No bookings in queue.</td>
+                    <td colSpan="5" className="py-4 text-center text-slate-500">
+                      No bookings in queue.
+                    </td>
                   </tr>
                 ) : (
                   bookings.map((b) => (
@@ -153,11 +164,15 @@ export default function AdminDashboard({ modalId }) {
                       <td className="py-4 text-slate-400">{b.customer_email}</td>
                       <td className="py-4">{new Date(b.booking_date).toLocaleString()}</td>
                       <td className="py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] ${
-                          b.status === 'cancelled' ? 'bg-red-900/30 text-red-400 border border-red-800' :
-                          b.status === 'confirmed' ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800' :
-                          'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
-                        }`}>
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] ${
+                            b.status === 'cancelled'
+                              ? 'bg-red-900/30 text-red-400 border border-red-800'
+                              : b.status === 'confirmed'
+                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                                : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
+                          }`}
+                        >
                           {b.status || 'pending'}
                         </span>
                       </td>

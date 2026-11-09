@@ -14,9 +14,7 @@ const partsFormatter = new Intl.DateTimeFormat('en-US', {
 
 /** Wall-clock parts of `date` in Pacific time. */
 export function pacificParts(date) {
-  const p = Object.fromEntries(
-    partsFormatter.formatToParts(date).map((x) => [x.type, x.value]),
-  );
+  const p = Object.fromEntries(partsFormatter.formatToParts(date).map((x) => [x.type, x.value]));
   return {
     year: Number(p.year),
     month: Number(p.month),
