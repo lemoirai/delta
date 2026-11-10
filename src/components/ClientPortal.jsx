@@ -96,10 +96,14 @@ export default function ClientPortal({ modalId }) {
     <div className="relative w-full max-w-2xl bg-[#090D16] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-white">
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
         <div>
-          <h2 className="text-xl font-bold">Client Portal Access</h2>
+          <h2 id="portal-title" className="text-xl font-bold">
+            Client Portal Access
+          </h2>
           <p className="text-xs text-slate-400">View and manage your upcoming appointments.</p>
         </div>
         <button
+          type="button"
+          aria-label="Close"
           onClick={(e) => {
             e.stopPropagation();
             handleClose();
@@ -112,9 +116,13 @@ export default function ClientPortal({ modalId }) {
 
       {step === 'email' && (
         <form onSubmit={handleRequestOTP} className="space-y-4">
-          <label className="block text-xs font-semibold text-slate-300">Email Address</label>
+          <label htmlFor="portal-email" className="block text-xs font-semibold text-slate-300">
+            Email Address
+          </label>
           <input
+            id="portal-email"
             type="email"
+            autoComplete="email"
             required
             placeholder="you@example.com"
             value={email}
@@ -137,8 +145,14 @@ export default function ClientPortal({ modalId }) {
           <p className="text-xs text-slate-400">
             Verification code sent to <span className="text-[#55CDFC]">{email}</span>.
           </p>
+          <label htmlFor="portal-code" className="sr-only">
+            Verification code
+          </label>
           <input
+            id="portal-code"
             type="text"
+            autoComplete="one-time-code"
+            inputMode="numeric"
             required
             placeholder="123456"
             value={otpCode}

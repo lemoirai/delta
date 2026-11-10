@@ -115,11 +115,16 @@ export default function BookingForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-            Full Name
+          <label
+            htmlFor="booking-name"
+            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
+          >
+            Name you&rsquo;d like us to use
           </label>
           <input
+            id="booking-name"
             type="text"
+            autoComplete="nickname"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -129,11 +134,16 @@ export default function BookingForm() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+          <label
+            htmlFor="booking-email"
+            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
+          >
             Email Address
           </label>
           <input
+            id="booking-email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -144,10 +154,14 @@ export default function BookingForm() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+        <label
+          htmlFor="booking-date"
+          className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
+        >
           Select Date
         </label>
         <input
+          id="booking-date"
           type="date"
           value={date}
           onChange={handleDateChange}
@@ -157,10 +171,17 @@ export default function BookingForm() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+        <p
+          id="slots-label"
+          className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
+        >
           Available Windows
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        </p>
+        <div
+          role="group"
+          aria-labelledby="slots-label"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
+        >
           {!date && (
             <span className="text-slate-500 text-xs italic col-span-full py-2">
               Select a date above to check availability.
@@ -176,6 +197,7 @@ export default function BookingForm() {
               key={slot.hour}
               type="button"
               disabled={slot.isTaken}
+              aria-pressed={selectedSlot === slot.isoString}
               onClick={() => setSelectedSlot(slot.isoString)}
               className={`p-3 rounded-xl border text-xs font-medium transition-all ${
                 slot.isTaken

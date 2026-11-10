@@ -97,6 +97,9 @@ import ClientPortal from '../components/ClientPortal.jsx';
 
     <div
       id="portal-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="portal-title"
       class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4"
     >
       <ClientPortal client:load modalId="portal-modal" />
@@ -112,9 +115,13 @@ import ClientPortal from '../components/ClientPortal.jsx';
       portalModal?.addEventListener('click', (e) => {
         if (e.target === portalModal) portalModal.classList.add('hidden');
       });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') portalModal?.classList.add('hidden');
+      });
     </script>
 
-    <footer class="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-600 mt-20">
+    <footer class="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-400 mt-20">
       <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p>© {new Date().getFullYear()} Delta Aesthetics LLC. All rights reserved.</p>
         <div class="flex items-center gap-1.5 opacity-60">
