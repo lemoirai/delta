@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { pb } from '../lib/pb.js';
 import { formatPacific } from '../lib/time.js';
+import { clientCanCancel, isCancelled, statusLabel } from '../lib/status.js';
 
 export default function ClientPortal({ modalId }) {
   const handleClose = () => {
@@ -85,7 +86,7 @@ export default function ClientPortal({ modalId }) {
   const handleCancel = async (id) => {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
     try {
-      await pb.collection('bookings').update(id, { status: 'cancelled' });
+      await pb.collection('bookings').update(id, { status: 'cancelled_by_client' });
       fetchBookings();
     } catch {
       alert('Failed to cancel booking.');
@@ -208,16 +209,16 @@ export default function ClientPortal({ modalId }) {
                       <td className="py-4">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[10px] ${
-                            b.status === 'cancelled'
+                            isCancelled(b.status)
                               ? 'bg-red-900/30 text-red-400 border border-red-800'
                               : 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
                           }`}
                         >
-                          {b.status || 'confirmed'}
+                          {statusLabel(b.status)}
                         </span>
                       </td>
                       <td className="py-4 text-right">
-                        {b.status !== 'cancelled' && (
+                        {clientCanCancel(b.status) && (
                           <button
                             onClick={() => handleCancel(b.id)}
                             className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded transition text-[10px] cursor-pointer"

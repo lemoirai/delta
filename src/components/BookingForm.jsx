@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { pb } from '../lib/pb.js';
 import { pacificDayRange, pacificParts, pacificToUtc } from '../lib/time.js';
+import { notCancelledFilter } from '../lib/status.js';
 
 const STANDARD_HOURS = [10, 12, 14, 16];
 
@@ -24,7 +25,7 @@ export default function BookingForm() {
       const { start, end } = pacificDayRange(chosenDate);
       const existingBookings = await pb.collection('bookings').getFullList({
         filter: pb.filter(
-          "booking_date >= {:start} && booking_date < {:end} && status != 'cancelled'",
+          `booking_date >= {:start} && booking_date < {:end} && ${notCancelledFilter()}`,
           { start, end },
         ),
       });
