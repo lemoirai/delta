@@ -2,7 +2,6 @@
 import '../styles/global.css';
 import BookingForm from '../components/BookingForm.jsx';
 import ClientPortal from '../components/ClientPortal.jsx';
-import AdminDashboard from '../components/AdminDashboard.jsx';
 ---
 
 <!doctype html>
@@ -36,12 +35,6 @@ import AdminDashboard from '../components/AdminDashboard.jsx';
             class="text-xs font-semibold text-slate-300 hover:text-white px-3 py-2 rounded-xl transition cursor-pointer"
           >
             Client Portal
-          </button>
-          <button
-            id="open-admin-btn"
-            class="text-xs font-semibold text-slate-400 hover:text-white px-3 py-2 rounded-xl transition cursor-pointer"
-          >
-            Staff Portal
           </button>
           <a
             href="#booking"
@@ -109,31 +102,15 @@ import AdminDashboard from '../components/AdminDashboard.jsx';
       <ClientPortal client:load modalId="portal-modal" />
     </div>
 
-    <div
-      id="admin-modal"
-      class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4"
-    >
-      <AdminDashboard client:load modalId="admin-modal" />
-    </div>
-
     <script>
       const portalModal = document.getElementById('portal-modal');
-      const adminModal = document.getElementById('admin-modal');
 
       document.getElementById('open-portal-btn')?.addEventListener('click', () => {
         portalModal?.classList.remove('hidden');
       });
 
-      document.getElementById('open-admin-btn')?.addEventListener('click', () => {
-        adminModal?.classList.remove('hidden');
-      });
-
       portalModal?.addEventListener('click', (e) => {
         if (e.target === portalModal) portalModal.classList.add('hidden');
-      });
-
-      adminModal?.addEventListener('click', (e) => {
-        if (e.target === adminModal) adminModal.classList.add('hidden');
       });
     </script>
 
