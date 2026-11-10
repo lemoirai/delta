@@ -1,27 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { pb } from '../lib/pb.js';
 import { formatPacific } from '../lib/time.js';
-import { staffActions, statusLabel } from '../lib/status.js';
+import { isCancelled, staffActions, statusLabel } from '../lib/status.js';
 
 export default function StaffView() {
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState(null);
   const [range, setRange] = useState('upcoming');
   const [busyId, setBusyId] = useState('');
   const [message, setMessage] = useState('');
 
-  const now = Date.now();
-  const filter = pb.filter(
-    range === 'upcoming' ? `booking_date >= {:now}` : `booking_date < {:now}`,
-    {
-      now: new Date(now),
-    },
-  );
+  const load = useCallback(async () => {
+    const upcoming = range === 'upcoming';
+    const filter = pb.filter(upcoming ? 'booking_date >= {:now}' : 'booking_date < {:now}', {
+      now: new Date(),
+    });
+    const sort = upcoming ? 'booking_date' : '-booking_date';
+    try {
+      setBookings(await pb.collection('bookings').getFullList({ filter, sort }));
+    } catch (err) {
+      console.error(err);
+      setMessage("Appointments didn't load. Refresh and try again.");
+    }
+  }, [range]);
 
-  const load = async () => {
-    const sort = range === 'upcoming' ? 'booking_date' : '-booking_date';
-    const records = await pb.collection('bookings').getFullList({ filter, sort });
-    setBookings(records);
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleAction = async (b, next) => {
     if (
@@ -47,10 +51,7 @@ export default function StaffView() {
         <button
           type="button"
           aria-pressed={range === 'upcoming'}
-          onClick={() => {
-            setRange('upcoming');
-            load();
-          }}
+          onClick={() => setRange('upcoming')}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
             range === 'upcoming'
               ? 'bg-[#55CDFC] text-black'
@@ -62,10 +63,7 @@ export default function StaffView() {
         <button
           type="button"
           aria-pressed={range === 'past'}
-          onClick={() => {
-            setRange('past');
-            load();
-          }}
+          onClick={() => setRange('past')}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
             range === 'past'
               ? 'bg-[#55CDFC] text-black'
@@ -78,9 +76,11 @@ export default function StaffView() {
 
       <p role="status" aria-live="polite" className="mb-4 text-xs text-slate-400">
         {message ||
-          (bookings.length === 0
-            ? 'No appointments in this range.'
-            : `${bookings.length} appointment(s).`)}
+          (bookings === null
+            ? 'Loading…'
+            : bookings.length === 0
+              ? 'No appointments in this range.'
+              : `${bookings.length} appointment(s).`)}
       </p>
 
       <div className="overflow-x-auto">
@@ -95,7 +95,7 @@ export default function StaffView() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/50">
-            {bookings.map((b) => {
+            {(bookings ?? []).map((b) => {
               const actions = staffActions(b.status);
               return (
                 <tr key={b.id}>
@@ -105,8 +105,7 @@ export default function StaffView() {
                   <td className="py-4">
                     <span
                       className={`px-2.5 py-1 rounded-full text-[10px] ${
-                        statusLabel(b.status) === 'Cancelled' ||
-                        statusLabel(b.status) === 'Cancelled by studio'
+                        isCancelled(b.status)
                           ? 'bg-red-900/30 text-red-400 border border-red-800'
                           : 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
                       }`}

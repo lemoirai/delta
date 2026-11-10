@@ -19,6 +19,7 @@ export default function ClientPortal({ modalId }) {
 
   useEffect(() => {
     if (pb.authStore.isValid && pb.authStore.record?.collectionName === 'users') {
+      setStep('dashboard');
       fetchBookings();
     }
   }, []);
