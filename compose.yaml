@@ -1,8 +1,8 @@
 # Local dev/test stack. See AGENTS.md before using.
 #
-#   docker compose up -d --wait     -> site http://localhost:4321
-#                                      PocketBase admin http://localhost:8090/_/
-#                                      Mailpit (captured email) http://localhost:8025
+#   docker compose up -d --wait     -> site http://127.0.0.1:4321
+#                                      PocketBase admin http://127.0.0.1:8090/_/
+#                                      Mailpit (captured email) http://127.0.0.1:8025
 #   docker compose logs -f web pocketbase
 #   docker compose down -v          (wipes the local database: clean slate)
 

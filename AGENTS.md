@@ -20,19 +20,21 @@ If `ops/` is missing (fresh clone), ask the owner for the private ops repo. Don'
 Don't run `npm run dev`, `astro dev` or `npm install` on the host to test. Use the compose stack:
 
 ```sh
-docker compose up -d --wait      # Astro dev server -> http://localhost:4321
+docker compose up -d --wait      # Astro dev server -> http://127.0.0.1:4321
+docker compose exec -T -e PB_URL=http://pocketbase:8090 web npm run stack:setup   # after a fresh volume
 docker compose logs -f web
 docker compose exec -T web npx astro build --outDir /app/.astro/dist-check   # build check
 docker compose down              # add -v to reset volumes
 ```
 
 - The container uses Node 24 / npm 11 to match the host, and runs `npm ci`. **If `package-lock.json` shows up as modified after a container run, stop and investigate.** Don't commit lockfile churn.
-- For browser testing (Playwright MCP or Claude in Chrome), use `http://localhost:4321` only.
+- For browser testing (Playwright MCP or Claude in Chrome), use `http://127.0.0.1:4321` only. `localhost` can resolve to a different server on the host's IPv6 loopback.
+- In Git Bash, set `MSYS_NO_PATHCONV=1` before `docker compose exec` commands that pass container paths, or Git Bash rewrites `/app/...` into a Windows path.
 - `compose.ai.yaml` is the owner's optional local LLM (`--profile ai`). It isn't part of the site; leave it alone.
 
-### Current limitation (until REFACTOR step 2 lands)
+### Local PocketBase
 
-The stack has no local PocketBase yet. The components still hard-code `https://api.delta-aesthetics.com`. **Don't submit any form, sign in or send OTP codes from the local site**, because that writes to production. Visual and layout checks are fine. Step 2 adds PocketBase, Mailpit (catches OTP email) and seed data. After that, all functional testing runs against the local stack.
+The stack runs its own PocketBase and Mailpit; the site talks to them through the dev server's `/api` proxy, and `src/lib/pb.js` refuses to start against production. Run `npm run stack:setup` (command above) once after `docker compose down -v` so email codes reach Mailpit (http://127.0.0.1:8025). There's no booking schema locally yet, so the booking form can't submit until the new schema lands.
 
 ## Rules
 
