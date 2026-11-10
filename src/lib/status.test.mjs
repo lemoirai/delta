@@ -6,6 +6,7 @@ import {
   notCancelledFilter,
   statusLabel,
   clientCanCancel,
+  staffActions,
 } from './status.js';
 
 test('cancelled values match the production slot index', () => {
@@ -32,4 +33,43 @@ test('labels; empty or unknown status reads as pending', () => {
   assert.equal(statusLabel('cancelled_by_admin'), 'Cancelled by studio');
   assert.equal(statusLabel(''), 'Pending');
   assert.equal(statusLabel(undefined), 'Pending');
+});
+
+test('staffActions: pending', () => {
+  assert.deepEqual(staffActions('pending'), [
+    { label: 'Confirm', next: 'confirmed' },
+    { label: 'Cancel', next: 'cancelled_by_admin' },
+  ]);
+});
+
+test('staffActions: confirmed', () => {
+  assert.deepEqual(staffActions('confirmed'), [
+    { label: 'Mark completed', next: 'completed' },
+    { label: 'Cancel', next: 'cancelled_by_admin' },
+  ]);
+});
+
+test('staffActions: reschedule_requested', () => {
+  assert.deepEqual(staffActions('reschedule_requested'), [
+    { label: 'Cancel', next: 'cancelled_by_admin' },
+  ]);
+});
+
+test('staffActions: rescheduled', () => {
+  assert.deepEqual(staffActions('rescheduled'), [
+    { label: 'Confirm', next: 'confirmed' },
+    { label: 'Cancel', next: 'cancelled_by_admin' },
+  ]);
+});
+
+test('staffActions: finished and cancelled bookings have no actions', () => {
+  assert.deepEqual(staffActions('completed'), []);
+  assert.deepEqual(staffActions('cancelled_by_client'), []);
+  assert.deepEqual(staffActions('cancelled_by_admin'), []);
+});
+
+test('staffActions: unknown or empty status is treated as pending', () => {
+  assert.deepEqual(staffActions('no_show'), staffActions('pending'));
+  assert.deepEqual(staffActions(''), staffActions('pending'));
+  assert.deepEqual(staffActions(undefined), staffActions('pending'));
 });

@@ -30,3 +30,41 @@ export function statusLabel(status) {
 export function clientCanCancel(status) {
   return !isCancelled(status) && status !== 'completed';
 }
+
+/**
+ * Staff actions available for a booking, in order. Each entry is
+ * `{ label, next }`: clicking it sets `status` to `next`.
+ *
+ *   pending         -> Confirm, Cancel
+ *   confirmed       -> Mark completed, Cancel
+ *   reschedule_requested -> Cancel
+ *   rescheduled     -> Confirm, Cancel
+ *   completed / cancelled_by_client / cancelled_by_admin -> none
+ *
+ * Unknown or empty status behaves like pending.
+ */
+export function staffActions(status) {
+  switch (status) {
+    case 'confirmed':
+      return [
+        { label: 'Mark completed', next: 'completed' },
+        { label: 'Cancel', next: 'cancelled_by_admin' },
+      ];
+    case 'reschedule_requested':
+      return [{ label: 'Cancel', next: 'cancelled_by_admin' }];
+    case 'rescheduled':
+      return [
+        { label: 'Confirm', next: 'confirmed' },
+        { label: 'Cancel', next: 'cancelled_by_admin' },
+      ];
+    case 'completed':
+    case 'cancelled_by_client':
+    case 'cancelled_by_admin':
+      return [];
+    default:
+      return [
+        { label: 'Confirm', next: 'confirmed' },
+        { label: 'Cancel', next: 'cancelled_by_admin' },
+      ];
+  }
+}
