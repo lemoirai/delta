@@ -1,42 +1,30 @@
-# Delta Aesthetics
+# Delta Aesthetics website
 
-Booking site for Delta Aesthetics LLC, an electrolysis practice in Washington State.
+Booking site for an electrolysis practice. Built with Astro 7, React, Tailwind CSS 4 and PocketBase.
 
-## Stack
-
-- [Astro 7](https://docs.astro.build) with [React islands](https://docs.astro.build/en/guides/framework-components/)
-- [Tailwind CSS v4](https://tailwindcss.com)
-- [PocketBase](https://pocketbase.io) — authentication, calendar, and data, hosted on a separate VM
-- Deployed as a static site to GitHub Pages via GitHub Actions
-
-## Layout
-
-`src/pages/index.astro` is a single self-contained page. The booking widget, client portal, and
-staff portal are React components loaded as islands. No layout system or routing is used.
-
-## Development and testing
-
-Testing uses a Docker compose stack (Node 24). The site hard-codes the production API endpoint, so
-don't submit forms, sign in, or send OTP codes from the local site — that writes to production.
-Visual and layout checks are fine. See [AGENTS.md](./AGENTS.md) for details.
+## Run locally
 
 ```sh
-docker compose up -d --wait      # Astro dev server -> http://localhost:4321
-docker compose logs -f web
-docker compose exec -T web npx astro build --outDir /app/.astro/dist-check   # build check
-docker compose down
+docker compose up -d --wait
+docker compose exec -T -e PB_URL=http://pocketbase:8090 web npm run stack:setup
 ```
 
-## Scripts
+- Site: http://127.0.0.1:4321
+- PocketBase admin: http://127.0.0.1:8090/\_/
+- Mailpit (captured email): http://127.0.0.1:8025
 
-| Script | Description |
-| --- | --- |
-| `npm run dev` | Start the Astro dev server |
-| `npm run build` | Static build |
-| `npm test` | Run the `node --test` suite |
-| `npm run lint` | ESLint (react, hooks, jsx-a11y, astro) |
-| `npm run format` | Prettier |
+Reset to a clean database with `docker compose down -v`, then run both commands again.
 
-## License
+Don't run `npm run dev` on the host; everything runs in the containers.
 
-© Delta Aesthetics LLC.
+## Checks
+
+```sh
+docker compose exec -T web npm run lint
+docker compose exec -T web npm test
+docker compose exec -T web npm run format:check
+```
+
+## Contributing
+
+Read [AGENTS.md](./AGENTS.md) first.

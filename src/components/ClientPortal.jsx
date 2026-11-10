@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { pb } from '../lib/pb.js';
+import { formatPacific } from '../lib/time.js';
 
 export default function ClientPortal({ modalId }) {
   const handleClose = () => {
@@ -15,7 +16,7 @@ export default function ClientPortal({ modalId }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (pb.authStore.isValid && pb.authStore.model?.collectionName === 'users') {
+    if (pb.authStore.isValid && pb.authStore.record?.collectionName === 'users') {
       setStep('dashboard');
       fetchBookings();
     }
@@ -24,7 +25,7 @@ export default function ClientPortal({ modalId }) {
   const fetchBookings = async () => {
     try {
       const records = await pb.collection('bookings').getFullList({
-        filter: `customer_email = '${pb.authStore.model?.email}'`,
+        filter: pb.filter('customer_email = {:email}', { email: pb.authStore.record?.email ?? '' }),
         sort: '-booking_date',
       });
       setBookings(records);
@@ -38,27 +39,28 @@ export default function ClientPortal({ modalId }) {
     setLoading(true);
     setError('');
     try {
-      // 1. Ensure user record exists in PocketBase 'users' collection before requesting OTP
+      const normalizedEmail = email.trim().toLowerCase();
+      // PocketBase answers requestOTP for an unknown email without sending anything,
+      // so the account has to exist first. The password is never used (sign-in is by code)
+      // but must match its confirmation.
+      const tempPassword = crypto.randomUUID() + 'A1!';
       try {
         await pb.collection('users').create({
-          email: email,
+          email: normalizedEmail,
           emailVisibility: true,
-          password: Math.random().toString(36).slice(-10) + 'A1!',
-          passwordConfirm: Math.random().toString(36).slice(-10) + 'A1!',
+          password: tempPassword,
+          passwordConfirm: tempPassword,
         });
-      } catch (createErr) {
-        // User already exists, which is expected for returning clients
+      } catch {
+        // Returning clients already have an account.
       }
 
-      // 2. Request the OTP code
-      const res = await pb.collection('users').requestOTP(email);
+      const res = await pb.collection('users').requestOTP(normalizedEmail);
       setOtpId(res.otpId);
       setStep('otp');
     } catch (err) {
       console.error('OTP request failed:', err);
-      setError(
-        'Unable to send code. Please check your email address and ensure public user creation is allowed on the users collection.',
-      );
+      setError("We couldn't send a code. Check the address and try again.");
     } finally {
       setLoading(false);
     }
@@ -69,7 +71,7 @@ export default function ClientPortal({ modalId }) {
     setLoading(true);
     setError('');
     try {
-      await pb.collection('users').authWithOTP(otpId, otpCode, email);
+      await pb.collection('users').authWithOTP(otpId, otpCode);
       setStep('dashboard');
       fetchBookings();
     } catch (err) {
@@ -85,20 +87,23 @@ export default function ClientPortal({ modalId }) {
     try {
       await pb.collection('bookings').update(id, { status: 'cancelled' });
       fetchBookings();
-    } catch (err) {
+    } catch {
       alert('Failed to cancel booking.');
     }
   };
 
   return (
     <div className="relative w-full max-w-2xl bg-[#090D16] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-white">
-      {/* Modal Close Header */}
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
         <div>
-          <h2 className="text-xl font-bold">Client Portal Access</h2>
+          <h2 id="portal-title" className="text-xl font-bold">
+            Client Portal Access
+          </h2>
           <p className="text-xs text-slate-400">View and manage your upcoming appointments.</p>
         </div>
         <button
+          type="button"
+          aria-label="Close"
           onClick={(e) => {
             e.stopPropagation();
             handleClose();
@@ -111,9 +116,13 @@ export default function ClientPortal({ modalId }) {
 
       {step === 'email' && (
         <form onSubmit={handleRequestOTP} className="space-y-4">
-          <label className="block text-xs font-semibold text-slate-300">Email Address</label>
+          <label htmlFor="portal-email" className="block text-xs font-semibold text-slate-300">
+            Email Address
+          </label>
           <input
+            id="portal-email"
             type="email"
+            autoComplete="email"
             required
             placeholder="you@example.com"
             value={email}
@@ -136,8 +145,14 @@ export default function ClientPortal({ modalId }) {
           <p className="text-xs text-slate-400">
             Verification code sent to <span className="text-[#55CDFC]">{email}</span>.
           </p>
+          <label htmlFor="portal-code" className="sr-only">
+            Verification code
+          </label>
           <input
+            id="portal-code"
             type="text"
+            autoComplete="one-time-code"
+            inputMode="numeric"
             required
             placeholder="123456"
             value={otpCode}
@@ -158,7 +173,7 @@ export default function ClientPortal({ modalId }) {
       {step === 'dashboard' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center text-xs text-slate-400">
-            <span>Signed in as {pb.authStore.model?.email}</span>
+            <span>Signed in as {pb.authStore.record?.email}</span>
             <button
               onClick={() => {
                 pb.authStore.clear();
@@ -189,7 +204,7 @@ export default function ClientPortal({ modalId }) {
                 ) : (
                   bookings.map((b) => (
                     <tr key={b.id}>
-                      <td className="py-4">{new Date(b.booking_date).toLocaleString()}</td>
+                      <td className="py-4">{formatPacific(b.booking_date)}</td>
                       <td className="py-4">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[10px] ${
