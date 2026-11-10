@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { pb } from '../lib/pb.js';
 import { formatPacific } from '../lib/time.js';
 import { clientCanCancel, isCancelled, statusLabel } from '../lib/status.js';
+import StaffView from './StaffView.jsx';
 
 export default function ClientPortal({ modalId }) {
   const handleClose = () => {
@@ -9,6 +10,8 @@ export default function ClientPortal({ modalId }) {
     if (modal) modal.classList.add('hidden');
   };
   const [step, setStep] = useState('email'); // email | otp | dashboard
+  const [isStaff, setIsStaff] = useState(false);
+  const [view, setView] = useState(isStaff ? 'staff' : 'client'); // client | staff
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpId, setOtpId] = useState('');
@@ -18,7 +21,8 @@ export default function ClientPortal({ modalId }) {
 
   useEffect(() => {
     if (pb.authStore.isValid && pb.authStore.record?.collectionName === 'users') {
-      setStep('dashboard');
+      setIsStaff(pb.authStore.record?.role === 'staff');
+      setView(pb.authStore.record?.role === 'staff' ? 'staff' : 'client');
       fetchBookings();
     }
   }, []);
@@ -98,7 +102,7 @@ export default function ClientPortal({ modalId }) {
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
         <div>
           <h2 id="portal-title" className="text-xl font-bold">
-            Client Portal Access
+            Access Portal
           </h2>
           <p className="text-xs text-slate-400">View and manage your upcoming appointments.</p>
         </div>
@@ -186,53 +190,82 @@ export default function ClientPortal({ modalId }) {
             </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-800 text-slate-400">
-                <tr>
-                  <th className="pb-3">Date & Time</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {bookings.length === 0 ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setView('client')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                view === 'client'
+                  ? 'bg-[#55CDFC] text-black'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Client view
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('staff')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                view === 'staff'
+                  ? 'bg-[#55CDFC] text-black'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Staff view
+            </button>
+          </div>
+
+          {view === 'staff' ? (
+            <StaffView />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-800 text-slate-400">
                   <tr>
-                    <td colSpan="3" className="py-4 text-center text-slate-500">
-                      No active bookings found.
-                    </td>
+                    <th className="pb-3">Date & Time</th>
+                    <th className="pb-3">Status</th>
+                    <th className="pb-3 text-right">Actions</th>
                   </tr>
-                ) : (
-                  bookings.map((b) => (
-                    <tr key={b.id}>
-                      <td className="py-4">{formatPacific(b.booking_date)}</td>
-                      <td className="py-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] ${
-                            isCancelled(b.status)
-                              ? 'bg-red-900/30 text-red-400 border border-red-800'
-                              : 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
-                          }`}
-                        >
-                          {statusLabel(b.status)}
-                        </span>
-                      </td>
-                      <td className="py-4 text-right">
-                        {clientCanCancel(b.status) && (
-                          <button
-                            onClick={() => handleCancel(b.id)}
-                            className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded transition text-[10px] cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                        )}
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {bookings.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="py-4 text-center text-slate-500">
+                        No active bookings found.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    bookings.map((b) => (
+                      <tr key={b.id}>
+                        <td className="py-4">{formatPacific(b.booking_date)}</td>
+                        <td className="py-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] ${
+                              isCancelled(b.status)
+                                ? 'bg-red-900/30 text-red-400 border border-red-800'
+                                : 'bg-emerald-900/30 text-emerald-400 border border-emerald-800'
+                            }`}
+                          >
+                            {statusLabel(b.status)}
+                          </span>
+                        </td>
+                        <td className="py-4 text-right">
+                          {clientCanCancel(b.status) && (
+                            <button
+                              onClick={() => handleCancel(b.id)}
+                              className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded transition text-[10px] cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

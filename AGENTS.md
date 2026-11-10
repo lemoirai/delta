@@ -30,6 +30,7 @@ docker compose down              # add -v to reset volumes
 - The container uses Node 24 / npm 11 to match the host, and runs `npm ci`. **If `package-lock.json` shows up as modified after a container run, stop and investigate.** Don't commit lockfile churn.
 - For browser testing (Playwright MCP or Claude in Chrome), use `http://127.0.0.1:4321` only. `localhost` can resolve to a different server on the host's IPv6 loopback.
 - In Git Bash, set `MSYS_NO_PATHCONV=1` before `docker compose exec` commands that pass container paths, or Git Bash rewrites `/app/...` into a Windows path.
+- Line endings are LF everywhere (`.gitattributes`, `.editorconfig`). If `git status` shows files as modified with no real diff, run `git diff --ignore-cr-at-eol --stat`: empty output means line endings only; re-check out the file instead of investigating further.
 - `compose.ai.yaml` is the owner's optional local LLM (`--profile ai`). It isn't part of the site; leave it alone.
 
 ### Local PocketBase

@@ -28,4 +28,27 @@ export default [
       'react/prop-types': 'off',
     },
   },
+  {
+    // PocketBase JS hooks and migrations run in PocketBase's own engine, which
+    // provides these globals.
+    files: ['backend/pb_hooks/**/*.js', 'backend/pb_migrations/**/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: {
+        $app: 'readonly',
+        $security: 'readonly',
+        $os: 'readonly',
+        __hooks: 'readonly',
+        migrate: 'readonly',
+        routerAdd: 'readonly',
+        cronAdd: 'readonly',
+        onRecordCreate: 'readonly',
+        onRecordUpdate: 'readonly',
+        onRecordRequestOTPRequest: 'readonly',
+        Collection: 'readonly',
+        Record: 'readonly',
+        SelectField: 'readonly',
+      },
+    },
+  },
 ];
