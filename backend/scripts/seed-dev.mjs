@@ -2,16 +2,20 @@
 //   docker compose exec -T -e PB_URL=http://pocketbase:8090 web npm run stack:seed
 // Add `-- --reset` to delete all bookings first.
 
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { must, superuserToken, assertSyntheticOnly, ensureUser, DEV_PASSWORD } from './dev-api.mjs';
+import { must, superuserToken, warnNonSynthetic, ensureUser, DEV_PASSWORD } from './dev-api.mjs';
 
 const require = createRequire(import.meta.url);
 const { pacificParts, pacificToUtc, addDays, toPbDate } = require('../lib/time.js');
 
 const token = await superuserToken();
-await assertSyntheticOnly(token);
+await warnNonSynthetic(token);
 
-const staff = await ensureUser(token, 'staff-001@example.test', 'staff');
+// The same file format users-sync imports, so dev staff are declared in one place.
+const staffList = JSON.parse(readFileSync(new URL('./staff.dev.json', import.meta.url), 'utf8'));
+const staff = [];
+for (const s of staffList) staff.push(await ensureUser(token, s.email, s.role));
 const alice = await ensureUser(token, 'client-001@example.test');
 const bob = await ensureUser(token, 'client-002@example.test');
 

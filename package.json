@@ -16,6 +16,7 @@
     "stack:setup": "node backend/scripts/local-setup.mjs",
     "stack:seed": "node backend/scripts/seed-dev.mjs",
     "stack:check-rules": "node backend/scripts/check-rules.mjs",
+    "users": "node backend/scripts/users-sync.mjs",
     "astro": "astro"
   },
   "dependencies": {

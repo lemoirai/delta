@@ -44,6 +44,7 @@ export default [
         cronAdd: 'readonly',
         onRecordCreate: 'readonly',
         onRecordUpdate: 'readonly',
+        onRecordCreateRequest: 'readonly',
         onRecordRequestOTPRequest: 'readonly',
         Collection: 'readonly',
         Record: 'readonly',

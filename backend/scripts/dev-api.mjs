@@ -41,13 +41,13 @@ export async function superuserToken() {
   return token;
 }
 
-export async function assertSyntheticOnly(token) {
+// Real accounts the owner adds locally are allowed (to test against existing users),
+// but say so, since production exports must never be loaded here (REFACTOR §9.0).
+export async function warnNonSynthetic(token) {
   const { items } = await must('GET', '/api/collections/users/records?perPage=500', null, token);
   const real = items.filter((u) => !String(u.email).endsWith('@example.test'));
   if (real.length) {
-    throw new Error(
-      `Refusing: ${real.length} user(s) without an @example.test email. Dev databases hold synthetic data only.`,
-    );
+    console.warn(`note: ${real.length} user(s) here without an @example.test email`);
   }
 }
 
