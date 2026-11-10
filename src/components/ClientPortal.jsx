@@ -98,7 +98,7 @@ export default function ClientPortal({ modalId }) {
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
         <div>
           <h2 id="portal-title" className="text-xl font-bold">
-            Client Portal Access
+            Access Portal
           </h2>
           <p className="text-xs text-slate-400">View and manage your upcoming appointments.</p>
         </div>
