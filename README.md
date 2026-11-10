@@ -29,13 +29,13 @@ docker compose down
 
 ## Scripts
 
-| Script | Description |
-| --- | --- |
-| `npm run dev` | Start the Astro dev server |
-| `npm run build` | Static build |
-| `npm test` | Run the `node --test` suite |
-| `npm run lint` | ESLint (react, hooks, jsx-a11y, astro) |
-| `npm run format` | Prettier |
+| Script           | Description                            |
+| ---------------- | -------------------------------------- |
+| `npm run dev`    | Start the Astro dev server             |
+| `npm run build`  | Static build                           |
+| `npm test`       | Run the `node --test` suite            |
+| `npm run lint`   | ESLint (react, hooks, jsx-a11y, astro) |
+| `npm run format` | Prettier                               |
 
 ## License
 

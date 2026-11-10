@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useRef, useState } from 'react';
 import { pb } from '../lib/pb.js';
 const STANDARD_HOURS = [10, 12, 14, 16];
 
@@ -8,6 +8,7 @@ export default function BookingForm() {
   const [selectedSlot, setSelectedSlot] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [acceptsShortNotice, setAcceptsShortNotice] = useState(false);
@@ -18,7 +19,6 @@ export default function BookingForm() {
     if (!chosenDate) return;
     setLoading(true);
     try {
-      // Fetch all bookings for the given date range (covers timezone variations)
       const startOfDay = `${chosenDate}T00:00:00.000Z`;
       const endOfDay = `${chosenDate}T23:59:59.999Z`;
 
@@ -26,7 +26,6 @@ export default function BookingForm() {
         filter: `booking_date >= '${startOfDay}' && booking_date <= '${endOfDay}' && status != 'cancelled' && status != 'cancelled_by_client' && status != 'cancelled_by_admin'`,
       });
 
-      // Extract local hour numbers from existing bookings
       const bookedHours = existingBookings.map((b) => {
         const d = new Date(b.booking_date);
         return d.getHours();
@@ -36,7 +35,6 @@ export default function BookingForm() {
         const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
         const ampm = hour >= 12 ? 'PM' : 'AM';
 
-        // Construct standard ISO date for the selected slot
         const slotDate = new Date(`${chosenDate}T${String(hour).padStart(2, '0')}:00:00`);
 
         return {
@@ -64,25 +62,22 @@ export default function BookingForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (submitting) return; // Immediate hard guard against duplicate triggers
-    setSubmitting(true);
-
+    if (submittingRef.current) return;
     if (!selectedSlot) {
       alert('Please select an available time slot.');
-      setSubmitting(false);
       return;
     }
-
+    submittingRef.current = true;
     setSubmitting(true);
-    let noticeHours = acceptsShortNotice
+    const noticeHours = acceptsShortNotice
       ? noticeUnit === 'days'
         ? noticeValue * 24
         : noticeValue
       : 0;
 
     const payload = {
-      customer_name: name,
-      customer_email: email,
+      customer_name: name.trim(),
+      customer_email: email.trim().toLowerCase(),
       booking_date: selectedSlot,
       status: 'pending',
       accepts_short_notice: acceptsShortNotice,
@@ -96,7 +91,6 @@ export default function BookingForm() {
       setEmail('');
       setSelectedSlot('');
       setAcceptsShortNotice(false);
-      // Refresh slots for current date
       await fetchSlotsForDate(date);
     } catch (err) {
       console.error('Full submission error details:', err);
@@ -104,10 +98,9 @@ export default function BookingForm() {
         console.error('PocketBase validation errors:', JSON.stringify(err.response.data, null, 2));
       }
 
-      // Check if uniqueness constraint blocked the insert
       if (err.response?.data?.booking_date?.code === 'validation_not_unique') {
         alert('This time slot was just taken. Please choose another window.');
-        await fetchSlotsForDate(date); // Refresh slots to show newly taken state
+        await fetchSlotsForDate(date);
       } else {
         alert(
           'Could not submit booking request: ' +
@@ -115,6 +108,7 @@ export default function BookingForm() {
         );
       }
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -220,7 +214,9 @@ export default function BookingForm() {
               type="number"
               min="1"
               value={noticeValue}
-              onChange={(e) => setNoticeValue(parseInt(e.target.value) || 1)}
+              onChange={(e) =>
+                setNoticeValue(Math.min(Math.max(parseInt(e.target.value, 10) || 1, 1), 30))
+              }
               className="w-16 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-center text-slate-100 text-xs focus:border-[#55CDFC]"
             />
             <select
