@@ -10,7 +10,7 @@ networks:
 
 services:
   llama:
-    profiles: ["ai"]
+    profiles: ['ai']
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
     container_name: llama-server
     deploy:
@@ -23,7 +23,7 @@ services:
     environment:
       - LLAMA_CACHE=/models
     ports:
-      - "127.0.0.1:8000:8080"
+      - '127.0.0.1:8000:8080'
     volumes:
       - ${LLAMA_MODELS_DIR:?set LLAMA_MODELS_DIR in .env}:/models
     command: >
