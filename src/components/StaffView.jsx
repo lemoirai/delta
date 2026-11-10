@@ -42,9 +42,9 @@ export default function StaffView() {
   };
 
   return (
-    <div className="relative w-full max-w-5xl bg-[#090D16] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-white">
+    <div className="relative w-full max-w-2xl bg-[#090D16] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-white">
       <h2 id="portal-title" className="text-xl font-bold mb-6 pb-4 border-b border-slate-800">
-        Booking queue
+        Access Portal
       </h2>
 
       <div className="flex gap-2 mb-4" role="group" aria-label="Appointment range">
