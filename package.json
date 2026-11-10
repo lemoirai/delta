@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "stack:setup": "node backend/scripts/local-setup.mjs",
     "astro": "astro"
   },
   "dependencies": {
