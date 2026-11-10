@@ -37,7 +37,8 @@ The stack has no local PocketBase yet. The components still hard-code `https://a
 ## Rules
 
 - Never call or modify production (`api.delta-aesthetics.com`, the VM, Cloudflare, Brevo) unless the owner asks for that specific action.
-- Never copy production data locally. Test data is synthetic (`*@example.test`).
+- Production data (database copies, backups) may exist on the owner's machine, but only outside this repo folder. Never put it in git (this repo or `ops/`), and never load it into a dev container: compose mounts the whole repo. Dev and test data is synthetic (`*@example.test`).
+- There are three PocketBase flavors: **cloud** (public booking, short-lived data), **studio** (staff, full records, the source of truth) and **dev** (this compose stack, either flavor, synthetic data). Details are in `ops/REFACTOR.md` §9.
 - Treat all client data as consumer health data: collect the minimum, use preferred names, keep email and calendar text generic, and don't log PII.
 - No superuser (`_superusers` / `pb.admins`) auth in site code. Staff are `users` with a `role`.
 - Pushes to `main` deploy to production via GitHub Actions. Work on branches and don't push or merge unless asked.

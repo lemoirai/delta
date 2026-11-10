@@ -29,3 +29,10 @@ ops/
 # local environment
 .env.*
 !.env.example
+
+# PocketBase data and backups: production copies live outside the repo (see AGENTS.md)
+pb_data/
+pb_backups/
+*.db
+*.db-shm
+*.db-wal
