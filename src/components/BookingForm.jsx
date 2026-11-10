@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import { pb } from '../lib/pb.js';
+import { pacificDayRange, pacificParts, pacificToUtc } from '../lib/time.js';
+
 const STANDARD_HOURS = [10, 12, 14, 16];
 
 export default function BookingForm() {
@@ -19,23 +21,19 @@ export default function BookingForm() {
     if (!chosenDate) return;
     setLoading(true);
     try {
-      const startOfDay = `${chosenDate}T00:00:00.000Z`;
-      const endOfDay = `${chosenDate}T23:59:59.999Z`;
-
+      const { start, end } = pacificDayRange(chosenDate);
       const existingBookings = await pb.collection('bookings').getFullList({
-        filter: `booking_date >= '${startOfDay}' && booking_date <= '${endOfDay}' && status != 'cancelled' && status != 'cancelled_by_client' && status != 'cancelled_by_admin'`,
+        filter: pb.filter(
+          "booking_date >= {:start} && booking_date < {:end} && status != 'cancelled'",
+          { start, end },
+        ),
       });
-
-      const bookedHours = existingBookings.map((b) => {
-        const d = new Date(b.booking_date);
-        return d.getHours();
-      });
+      const bookedHours = existingBookings.map((b) => pacificParts(new Date(b.booking_date)).hour);
 
       const slotData = STANDARD_HOURS.map((hour) => {
         const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
         const ampm = hour >= 12 ? 'PM' : 'AM';
-
-        const slotDate = new Date(`${chosenDate}T${String(hour).padStart(2, '0')}:00:00`);
+        const slotDate = pacificToUtc(chosenDate, hour);
 
         return {
           hour,

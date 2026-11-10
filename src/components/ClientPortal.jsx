@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { pb } from '../lib/pb.js';
+import { formatPacific } from '../lib/time.js';
 
 export default function ClientPortal({ modalId }) {
   const handleClose = () => {
@@ -189,7 +190,7 @@ export default function ClientPortal({ modalId }) {
                 ) : (
                   bookings.map((b) => (
                     <tr key={b.id}>
-                      <td className="py-4">{new Date(b.booking_date).toLocaleString()}</td>
+                      <td className="py-4">{formatPacific(b.booking_date)}</td>
                       <td className="py-4">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[10px] ${
