@@ -4,7 +4,7 @@
 const SIGN = {
   top_up: 1, // client bought credit; amount is the credit, never the surcharge
   gift_redeem: 1,
-  goodwill: 1, // goodwill is dollar credit, not a discount (REFACTOR §9.3)
+  goodwill: 1, // goodwill is dollar credit, not a discount (architecture §9.3)
   redemption: -1, // credit spent on a session
   fee: -1, // late-cancel or no-show fee; may take the balance below zero
   refund_out: -1, // remaining credit paid back to the client

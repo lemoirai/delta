@@ -20,7 +20,7 @@ migrate(
       type: 'base',
       name: 'bookings',
       // List and create stay public until the /api/slots and /api/bookings routes
-      // exist (REFACTOR step 5), because the booking form needs them.
+      // exist (roadmap step 5), because the booking form needs them.
       listRule: '',
       viewRule: "client = @request.auth.id || @request.auth.role = 'staff'",
       createRule: '',

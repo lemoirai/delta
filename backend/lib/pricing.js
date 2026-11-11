@@ -1,4 +1,4 @@
-// One discount engine for both instances (REFACTOR §9.3). The cloud quotes with its
+// One discount engine for both instances (architecture §9.3). The cloud quotes with its
 // sanitized snapshot, the studio prices checkout with full data; same inputs must give
 // the same price, so this module stays pure. Money is integer cents.
 
