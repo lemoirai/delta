@@ -6,10 +6,12 @@ Booking site for a small electrolysis practice in Washington State. Astro 7 + Re
 
 The planning docs are in `ops/`. That folder is gitignored here and has its own private git repo. Read them before changing code:
 
-1. `ops/REFACTOR.md`, **"Status: where we left off"** at the top: current progress and the next step. Update it before you finish a session.
-2. `ops/REFACTOR.md` §2–§6: compliance requirements (Washington My Health My Data Act and others), known defects, the Docker test design and the execution order.
+1. `ops/STATUS.md` and `ops/TODO.md`: current state, what's next, and what's waiting on the owner. Update both before you finish a session.
+2. `ops/README.md`: map of everything else. Read the parts you need: `ops/design/` (architecture, Washington compliance), `ops/decisions.md` (owner decisions), `ops/agents/cloud-claude.md` (how sessions work), `ops/dev/helper-scripts.md`.
 3. `ops/HANDOFF.md`: product design (pricing, credit, data model, roadmap).
-4. `ops/LEGAL_NOTES.md`: running attorney and accountant questions. When code depends on a legal assumption, note it there (Open table) rather than deciding it silently.
+4. `ops/questions/legal.md`: running attorney and accountant questions. When code depends on a legal assumption, note it there (Open table) rather than deciding it silently.
+
+Code comments cite old `REFACTOR §` numbers; `ops/REFACTOR.md` maps them to the new files.
 
 Commit changes to `ops/` in its own repo: `git -C ops add -A && git -C ops commit -m "..."`.
 
@@ -40,8 +42,8 @@ The stack runs its own PocketBase and Mailpit; the site talks to them through th
 ## Rules
 
 - Never call or modify production (`api.delta-aesthetics.com`, the VM, Cloudflare, Brevo) unless the owner asks for that specific action.
-- Production data (database copies, backups) may exist on the owner's machine, but only outside this repo folder. Never put it in git (this repo or `ops/`), and never load it into a dev container: compose mounts the whole repo. Dev and test data is synthetic (`*@example.test`).
-- There are three PocketBase flavors: **cloud** (public booking, short-lived data), **studio** (staff, full records, the source of truth) and **dev** (this compose stack, either flavor, synthetic data). Details are in `ops/REFACTOR.md` §9.
+- Production data (database copies, backups) may exist on the owner's machine, but only outside this repo folder. Never put it in git (this repo or `ops/`), and never load it into a dev container: compose mounts the whole repo. Dev and test data is synthetic (`*@example.test`) by default; real accounts the owner adds by hand to test against existing users are allowed, and the dev scripts print a note when they see one.
+- There are three PocketBase flavors: **cloud** (public booking, short-lived data), **studio** (staff, full records, the source of truth) and **dev** (this compose stack, either flavor, synthetic data). Details are in `ops/design/architecture.md` §9.0.
 - Treat all client data as consumer health data: collect the minimum, use preferred names, keep email and calendar text generic, and don't log PII.
 - No superuser (`_superusers` / `pb.admins`) auth in site code. Staff are `users` with a `role`.
 - Pushes to `main` deploy to production via GitHub Actions. Work on branches and don't push or merge unless asked.

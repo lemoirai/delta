@@ -6,14 +6,14 @@ import {
   call,
   must,
   superuserToken,
-  assertSyntheticOnly,
+  warnNonSynthetic,
   ensureUser,
   userToken,
   DEV_PASSWORD,
 } from './dev-api.mjs';
 
 const su = await superuserToken();
-await assertSyntheticOnly(su);
+await warnNonSynthetic(su);
 
 const tag = Date.now();
 const email = (name) => `rules-${tag}-${name}@example.test`;
@@ -34,6 +34,17 @@ try {
   });
   if (signup.ok) created.users.push(signup.data.id);
   expect('sign-up cannot set role', signup.status, [400, 403]);
+
+  const direct = await call(
+    'POST',
+    '/api/collections/users/records',
+    { email: email('direct'), role: 'staff', verified: true },
+    su,
+  );
+  if (direct.ok) created.users.push(direct.data.id);
+  expect('superuser can create staff with only an email', direct.status, [200]);
+  const otp = await call('POST', '/api/collections/users/request-otp', { email: email('direct') });
+  expect('a user created that way can request a code', otp.status, [200]);
 
   const a = await ensureUser(su, email('a'));
   const b = await ensureUser(su, email('b'));

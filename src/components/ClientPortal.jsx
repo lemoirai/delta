@@ -10,8 +10,6 @@ export default function ClientPortal({ modalId }) {
     if (modal) modal.classList.add('hidden');
   };
   const [step, setStep] = useState('email'); // email | otp | dashboard
-  const [isStaff, setIsStaff] = useState(false);
-  const [view, setView] = useState(isStaff ? 'staff' : 'client'); // client | staff
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpId, setOtpId] = useState('');
@@ -21,8 +19,7 @@ export default function ClientPortal({ modalId }) {
 
   useEffect(() => {
     if (pb.authStore.isValid && pb.authStore.record?.collectionName === 'users') {
-      setIsStaff(pb.authStore.record?.role === 'staff');
-      setView(pb.authStore.record?.role === 'staff' ? 'staff' : 'client');
+      setStep('dashboard');
       fetchBookings();
     }
   }, []);
@@ -97,14 +94,24 @@ export default function ClientPortal({ modalId }) {
     }
   };
 
+  // Display only: the API rules enforce what staff can do, so a tampered role here
+  // shows buttons that the server refuses. Check for 'staff', never for "not client".
+  const isStaff = step === 'dashboard' && pb.authStore.record?.role === 'staff';
+
   return (
-    <div className="relative w-full max-w-2xl bg-[#090D16] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-white">
+    <div
+      className={`relative w-full ${isStaff ? 'max-w-5xl' : 'max-w-2xl'} bg-[#090D16] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-white`}
+    >
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
         <div>
           <h2 id="portal-title" className="text-xl font-bold">
             Access Portal
           </h2>
-          <p className="text-xs text-slate-400">View and manage your upcoming appointments.</p>
+          <p className="text-xs text-slate-400">
+            {isStaff
+              ? 'Review and manage the booking queue.'
+              : 'View and manage your upcoming appointments.'}
+          </p>
         </div>
         <button
           type="button"
@@ -190,32 +197,7 @@ export default function ClientPortal({ modalId }) {
             </button>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setView('client')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                view === 'client'
-                  ? 'bg-[#55CDFC] text-black'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              Client view
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('staff')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                view === 'staff'
-                  ? 'bg-[#55CDFC] text-black'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              Staff view
-            </button>
-          </div>
-
-          {view === 'staff' ? (
+          {isStaff ? (
             <StaffView />
           ) : (
             <div className="overflow-x-auto">
