@@ -1,0 +1,94 @@
+---
+import '../styles/global.css';
+import ClientPortal from '../components/ClientPortal.jsx';
+
+// Props: title (defaults to the studio's page title) and an optional meta description.
+const { title = 'Delta Aesthetics | Electrology & Affirming Care', description = '' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="bg-slate-950 text-slate-100 antialiased scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100 selection:bg-[#55CDFC]/30 selection:text-white flex flex-col justify-between">
+    <div
+      role="note"
+      class="w-full bg-amber-400 text-slate-950 text-center text-sm font-semibold px-4 py-2"
+    >
+      Demo site: booking is not live yet. Please don't enter real personal information.
+    </div>
+    <header class="w-full border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#55CDFC] via-white to-[#F7A8B8] flex items-center justify-center font-bold text-slate-950 text-lg shadow-lg shadow-[#55CDFC]/10">
+            Δ
+          </div>
+          <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-[#55CDFC] via-white to-[#F7A8B8] bg-clip-text text-transparent">
+            Delta Aesthetics
+          </span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            id="open-portal-btn"
+            class="text-xs font-semibold text-slate-300 hover:text-white px-3 py-2 rounded-xl transition cursor-pointer"
+          >
+            Sign in
+          </button>
+          <a
+            href="#booking"
+            class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-[#55CDFC] px-4 py-2 rounded-xl border border-[#55CDFC]/30 transition-all shadow-sm sm:hidden"
+          >
+            Book Appointment
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <slot />
+
+    <!--
+      Native modal dialog: the browser handles Escape, traps focus and makes the page inert.
+      It fills the viewport and the panel sits centred inside it, so a click that lands on
+      the dialog itself (not the panel) is a click on the dimmed area around the panel.
+    -->
+    <dialog
+      id="portal-modal"
+      aria-labelledby="portal-title"
+      class="m-0 h-full max-h-none w-full max-w-none border-0 bg-transparent p-4 text-slate-100 open:flex items-center justify-center backdrop:bg-slate-950/80 backdrop:backdrop-blur-md"
+    >
+      <ClientPortal client:load modalId="portal-modal" />
+    </dialog>
+
+    <script>
+      const portalModal = document.getElementById('portal-modal');
+      let opener = null;
+
+      document.getElementById('open-portal-btn')?.addEventListener('click', (e) => {
+        opener = e.currentTarget;
+        portalModal?.showModal();
+      });
+
+      portalModal?.addEventListener('click', (e) => {
+        if (e.target === portalModal) portalModal.close();
+      });
+
+      portalModal?.addEventListener('close', () => opener?.focus());
+    </script>
+
+    <footer class="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-400 mt-20">
+      <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p>© {new Date().getFullYear()} Delta Aesthetics LLC. All rights reserved.</p>
+        <div class="flex items-center gap-1.5 opacity-60">
+          <span class="w-3 h-2 bg-[#55CDFC] rounded-sm inline-block"></span>
+          <span class="w-3 h-2 bg-white rounded-sm inline-block"></span>
+          <span class="w-3 h-2 bg-[#F7A8B8] rounded-sm inline-block"></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

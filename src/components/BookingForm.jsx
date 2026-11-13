@@ -12,11 +12,16 @@ export default function BookingForm() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
+  const [status, setStatus] = useState({ text: '', kind: 'success' });
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [acceptsShortNotice, setAcceptsShortNotice] = useState(false);
   const [noticeValue, setNoticeValue] = useState(2);
   const [noticeUnit, setNoticeUnit] = useState('hours');
+
+  const clearStatus = () => {
+    setStatus({ text: '', kind: 'success' });
+  };
 
   const fetchSlotsForDate = async (chosenDate) => {
     if (!chosenDate) return;
@@ -53,6 +58,7 @@ export default function BookingForm() {
   };
 
   const handleDateChange = (e) => {
+    clearStatus();
     const chosenDate = e.target.value;
     setDate(chosenDate);
     setSelectedSlot('');
@@ -62,8 +68,9 @@ export default function BookingForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submittingRef.current) return;
+    clearStatus();
     if (!selectedSlot) {
-      alert('Please select an available time slot.');
+      setStatus({ text: 'Please select an available time slot.', kind: 'error' });
       return;
     }
     submittingRef.current = true;
@@ -85,7 +92,10 @@ export default function BookingForm() {
 
     try {
       await pb.collection('bookings').create(payload);
-      alert('Booking request received! We will confirm your slot shortly.');
+      setStatus({
+        text: 'Booking request received! We will confirm your slot shortly.',
+        kind: 'success',
+      });
       setName('');
       setEmail('');
       setSelectedSlot('');
@@ -98,13 +108,18 @@ export default function BookingForm() {
       }
 
       if (err.response?.data?.booking_date?.code === 'validation_not_unique') {
-        alert('This time slot was just taken. Please choose another window.');
+        setStatus({
+          text: 'This time slot was just taken. Please choose another window.',
+          kind: 'error',
+        });
         await fetchSlotsForDate(date);
       } else {
-        alert(
-          'Could not submit booking request: ' +
+        setStatus({
+          text:
+            'Could not submit booking request: ' +
             (err.message || 'Check console for validation details.'),
-        );
+          kind: 'error',
+        });
       }
     } finally {
       submittingRef.current = false;
@@ -127,7 +142,10 @@ export default function BookingForm() {
             type="text"
             autoComplete="nickname"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              clearStatus();
+              setName(e.target.value);
+            }}
             required
             placeholder="Alex Morgan"
             className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#55CDFC] focus:ring-1 focus:ring-[#55CDFC] text-sm transition-all"
@@ -146,7 +164,10 @@ export default function BookingForm() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              clearStatus();
+              setEmail(e.target.value);
+            }}
             required
             placeholder="alex@example.com"
             className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#55CDFC] focus:ring-1 focus:ring-[#55CDFC] text-sm transition-all"
@@ -199,7 +220,10 @@ export default function BookingForm() {
               type="button"
               disabled={slot.isTaken}
               aria-pressed={selectedSlot === slot.isoString}
-              onClick={() => setSelectedSlot(slot.isoString)}
+              onClick={() => {
+                clearStatus();
+                setSelectedSlot(slot.isoString);
+              }}
               className={`p-3 rounded-xl border text-xs font-medium transition-all ${
                 slot.isTaken
                   ? 'bg-slate-950/40 border-slate-800/40 text-slate-600 cursor-not-allowed line-through'
@@ -222,7 +246,10 @@ export default function BookingForm() {
           <input
             type="checkbox"
             checked={acceptsShortNotice}
-            onChange={(e) => setAcceptsShortNotice(e.target.checked)}
+            onChange={(e) => {
+              clearStatus();
+              setAcceptsShortNotice(e.target.checked);
+            }}
             className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-[#55CDFC] focus:ring-0 focus:ring-offset-0"
           />
           <span>Notify me if an earlier appointment opens up</span>
@@ -230,19 +257,31 @@ export default function BookingForm() {
 
         {acceptsShortNotice && (
           <div className="flex flex-wrap gap-2 items-center pt-2 border-t border-slate-800">
-            <span className="text-xs text-slate-400">Minimum notice required:</span>
+            <label htmlFor="booking-notice" className="text-xs text-slate-400">
+              Minimum notice required:
+            </label>
             <input
+              id="booking-notice"
               type="number"
               min="1"
               value={noticeValue}
-              onChange={(e) =>
-                setNoticeValue(Math.min(Math.max(parseInt(e.target.value, 10) || 1, 1), 30))
-              }
+              onChange={(e) => {
+                clearStatus();
+                setNoticeValue(Math.min(Math.max(parseInt(e.target.value, 10) || 1, 1), 30));
+              }}
               className="w-16 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-center text-slate-100 text-xs focus:border-[#55CDFC]"
             />
+            {/* The unit sits right after the number, so its label is for screen readers only. */}
+            <label htmlFor="booking-notice-unit" className="sr-only">
+              Notice unit
+            </label>
             <select
+              id="booking-notice-unit"
               value={noticeUnit}
-              onChange={(e) => setNoticeUnit(e.target.value)}
+              onChange={(e) => {
+                clearStatus();
+                setNoticeUnit(e.target.value);
+              }}
               className="px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:border-[#55CDFC]"
             >
               <option value="hours">Hour(s)</option>
@@ -252,10 +291,22 @@ export default function BookingForm() {
         )}
       </fieldset>
 
+      {status.text && (
+        <div
+          role={status.kind === 'error' ? 'alert' : 'status'}
+          aria-live={status.kind === 'error' ? 'assertive' : 'polite'}
+          className={`text-xs text-center px-1 ${
+            status.kind === 'error' ? 'text-red-400' : 'text-[#55CDFC]'
+          }`}
+        >
+          {status.text}
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={submitting}
-        className="w-full py-4 bg-gradient-to-r from-[#55CDFC] via-white to-[#F7A8B8] hover:opacity-95 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-xl shadow-[#55CDFC]/10 disabled:opacity-50 cursor-pointer"
+        className="w-full py-4 bg-gradient-to-r from-[#55CDFC] via-white to-[#F7A8B8] hover:opacity-95 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-xl shadow-[#55CDFC]/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         {submitting ? 'Submitting...' : 'Submit Booking Request'}
       </button>
