@@ -7,6 +7,7 @@ export default function StaffView() {
   const [bookings, setBookings] = useState(null);
   const [range, setRange] = useState('upcoming');
   const [busyId, setBusyId] = useState('');
+  const [confirmingId, setConfirmingId] = useState('');
   const [message, setMessage] = useState('');
 
   const load = useCallback(async () => {
@@ -27,12 +28,30 @@ export default function StaffView() {
     load();
   }, [load]);
 
+  // Cancelling asks first, inline on the row (one row at a time); backing out sends nothing.
+  const finishCancel = async (b) => {
+    setBusyId(b.id);
+    try {
+      await pb.collection('bookings').update(b.id, { status: 'cancelled_by_admin' });
+      await load();
+    } catch (err) {
+      console.error(err);
+      setMessage("That didn't save. Refresh and try again.");
+    } finally {
+      setBusyId('');
+      setConfirmingId('');
+    }
+  };
+
+  const keepIt = useCallback(() => {
+    setConfirmingId('');
+  }, []);
+
   const handleAction = async (b, next) => {
-    if (
-      next === 'cancelled_by_admin' &&
-      !confirm('Cancel this appointment? The client will need to rebook.')
-    )
+    if (next === 'cancelled_by_admin') {
+      setConfirmingId(b.id);
       return;
+    }
     setBusyId(b.id);
     try {
       await pb.collection('bookings').update(b.id, { status: next });
@@ -44,6 +63,19 @@ export default function StaffView() {
       setBusyId('');
     }
   };
+
+  // Escape backs out of the row's question. preventDefault stops the same keypress from
+  // also closing the portal dialog.
+  useEffect(() => {
+    if (!confirmingId) return;
+    const handleKey = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      if (!busyId) keepIt();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [confirmingId, busyId, keepIt]);
 
   return (
     <div>
@@ -97,8 +129,9 @@ export default function StaffView() {
           <tbody className="divide-y divide-slate-800/50">
             {(bookings ?? []).map((b) => {
               const actions = staffActions(b.status);
+              const isConfirming = confirmingId === b.id;
               return (
-                <tr key={b.id}>
+                <tr key={b.id} className={isConfirming ? 'bg-red-500/10' : ''}>
                   <td className="py-4">{formatPacific(b.booking_date)}</td>
                   <td className="py-4">{b.customer_name}</td>
                   <td className="py-4">{b.customer_email}</td>
@@ -114,21 +147,49 @@ export default function StaffView() {
                     </span>
                   </td>
                   <td className="py-4 text-right">
-                    {actions.map((a) => (
-                      <button
-                        key={a.next}
-                        type="button"
-                        disabled={busyId === b.id}
-                        onClick={() => handleAction(b, a.next)}
-                        className={`px-3 py-1 rounded transition text-[10px] cursor-pointer ${
-                          a.next === 'cancelled_by_admin'
-                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30'
-                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        } disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+                    {isConfirming ? (
+                      <div
+                        className="flex items-center justify-end gap-3"
+                        role="group"
+                        aria-label="Confirm cancellation"
                       >
-                        {a.label}
-                      </button>
-                    ))}
+                        <p className="text-slate-300 pr-2">
+                          Cancel this appointment? The client will need to rebook.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={keepIt}
+                          disabled={busyId === b.id}
+                          className="px-3 py-1 rounded transition text-[10px] cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-100 border border-slate-600 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-700"
+                        >
+                          Keep it
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busyId === b.id}
+                          onClick={() => finishCancel(b)}
+                          className="px-3 py-1 rounded transition text-[10px] cursor-pointer bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        >
+                          Yes, cancel it
+                        </button>
+                      </div>
+                    ) : (
+                      actions.map((a) => (
+                        <button
+                          key={a.next}
+                          type="button"
+                          disabled={busyId === b.id}
+                          onClick={() => handleAction(b, a.next)}
+                          className={`px-3 py-1 rounded transition text-[10px] cursor-pointer ${
+                            a.next === 'cancelled_by_admin'
+                              ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30'
+                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          } disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+                        >
+                          {a.label}
+                        </button>
+                      ))
+                    )}
                   </td>
                 </tr>
               );
