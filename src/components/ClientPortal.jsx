@@ -44,6 +44,9 @@ export default function ClientPortal({ modalId }) {
   }, [step]);
 
   const fetchBookings = async () => {
+    // Staff see StaffView, which loads its own queue; a second bookings request here would
+    // be auto-cancelled by the SDK and logged as an error.
+    if (pb.authStore.record?.role === 'staff') return;
     try {
       const records = await pb.collection('bookings').getFullList({
         filter: pb.filter('customer_email = {:email}', { email: pb.authStore.record?.email ?? '' }),

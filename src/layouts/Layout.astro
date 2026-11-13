@@ -51,11 +51,9 @@ const { title = 'Delta Aesthetics | Electrology & Affirming Care', description =
 
     <slot />
 
-    <!--
-      Native modal dialog: the browser handles Escape, traps focus and makes the page inert.
-      It fills the viewport and the panel sits centred inside it, so a click that lands on
-      the dialog itself (not the panel) is a click on the dimmed area around the panel.
-    -->
+    {/* Native modal dialog: the browser handles Escape, traps focus and makes the page
+         inert. It fills the viewport with the panel centred inside, so a click that lands
+         on the dialog itself (not the panel) is a click on the dimmed area around it. */}
     <dialog
       id="portal-modal"
       aria-labelledby="portal-title"
