@@ -1,5 +1,5 @@
 // Shared helpers for the dev-stack scripts. Every script refuses production hosts
-// and any database holding a non-synthetic email (REFACTOR §9.0).
+// (architecture §9.0).
 
 export const PB = process.env.PB_URL ?? 'http://127.0.0.1:8090';
 const IDENTITY = process.env.PB_SUPERUSER_EMAIL ?? 'admin@example.test';
@@ -42,7 +42,7 @@ export async function superuserToken() {
 }
 
 // Real accounts the owner adds locally are allowed (to test against existing users),
-// but say so, since production exports must never be loaded here (REFACTOR §9.0).
+// but say so, since production exports must never be loaded here (architecture §9.0).
 export async function warnNonSynthetic(token) {
   const { items } = await must('GET', '/api/collections/users/records?perPage=500', null, token);
   const real = items.filter((u) => !String(u.email).endsWith('@example.test'));

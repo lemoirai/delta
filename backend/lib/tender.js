@@ -1,4 +1,4 @@
-// Payment-method pricing (REFACTOR §9.4). Card payments carry processing fees; cash,
+// Payment-method pricing (architecture §9.4). Card payments carry processing fees; cash,
 // Zelle and ACH don't, so they cost less. Which side carries the difference depends on
 // what Helcim supports, so both modes exist and the studio config picks one:
 //   card_surcharge: listed price is the cash price; credit cards pay a surcharge

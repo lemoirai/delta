@@ -11,7 +11,7 @@ The planning docs are in `ops/`. That folder is gitignored here and has its own 
 3. `ops/HANDOFF.md`: product design (pricing, credit, data model, roadmap).
 4. `ops/questions/legal.md`: running attorney and accountant questions. When code depends on a legal assumption, note it there (Open table) rather than deciding it silently.
 
-Code comments cite old `REFACTOR §` numbers; `ops/REFACTOR.md` maps them to the new files.
+Code comments cite section numbers: `architecture §9.x` is `ops/design/architecture.md`, `HANDOFF §x` is `ops/HANDOFF.md`, "roadmap step N" is the roadmap in `ops/TODO.md`.
 
 Commit changes to `ops/` in its own repo: `git -C ops add -A && git -C ops commit -m "..."`.
 
@@ -19,7 +19,7 @@ If `ops/` is missing (fresh clone), ask the owner for the private ops repo. Don'
 
 ## Development and testing: Docker only
 
-Don't run `npm run dev`, `astro dev` or `npm install` on the host to test. Use the compose stack:
+**Never run `node`, `npm` or `npx` on the host**, not even a small dependency-free script: the host is the owner's personal PC, and npm's nested dependencies are a supply-chain risk (ADR-13). Edit files with your editing tools, git and plain shell; run anything Node-based (scripts, tests, builds, syntax checks) inside the compose stack:
 
 ```sh
 docker compose up -d --wait      # Astro dev server -> http://127.0.0.1:4321
